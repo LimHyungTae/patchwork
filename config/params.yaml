@@ -1,0 +1,62 @@
+sensor_height: 1.723
+save_flag: true
+gpf:
+    num_iter: 3
+    num_lpr: 20
+    th_seeds: 0.6 # 1.2             when multiple- 0.6
+    th_dist: 0.2  # 0.3            when multiple- 0.2
+
+
+r_gpf:
+    num_iter: 3
+    num_lpr: 10
+    num_min_pts: 9
+    th_seeds: 0.4
+    th_dist: 0.1
+    max_r: 80.0
+    num_rings: 32       # 35
+    num_sectors: 108    # 20
+
+simple:
+    mode: "RANSAC" # "RANSAC" or "Ceres"
+    RANSAC:
+        th_dist: 0.15
+        margin: 0.3
+    Ceres:
+        margin: 0.3
+
+
+patchwork:
+    mode: "czm" # [czm]
+    verbose: true
+    visualize: true # Ground Likelihood Estimation is visualized
+    num_iter: 3
+    num_lpr: 20
+    num_min_pts: 10
+    th_seeds: 0.5
+    th_dist: 0.125
+    max_r: 80.0
+    min_r: 2.7
+    uprightness_thr: 0.707 # 45: 0.707 / 60: 0.866
+
+    adaptive_seed_selection_margin: -1.1
+    uniform:
+        num_rings: 16
+        num_sectors: 54
+    czm:
+        num_zones: 4
+        num_sectors_each_zone: [16, 32 ,54, 32]
+        mum_rings_each_zone: [2, 4, 4, 4]
+        elevation_thresholds:  [-1.2, -0.9984, -0.851, -0.605] # For elevation. The size should be equal to flatness_thresholds vector
+        flatness_thresholds:  [0.0, 0.000125, 0.000185, 0.000185]  # For flatness. The size should be equal to elevation_thresholds vector
+
+
+cascaded_gseg:
+  sensor_model: 64
+  max_slope: 5.0
+  vertical_thres: 0.50
+  remove_floor: true
+  plane_dis_thres: 0.08
+  n_section: 4
+  plane_height_thres: 5.0
+  plane_ang_thres: 16.0
