@@ -3,7 +3,6 @@
 
 #include <sensor_msgs/PointCloud2.h>
 #include <ros/ros.h>
-#include "patchwork/utils.hpp"
 #include <jsk_recognition_msgs/PolygonArray.h>
 #include <Eigen/Dense>
 #include <boost/format.hpp>
@@ -20,20 +19,23 @@ using Eigen::MatrixXf;
 using Eigen::JacobiSVD;
 using Eigen::VectorXf;
 
-using PointType = PointXYZILID;
-
-typedef std::vector<pcl::PointCloud<PointType> > Ring;
-typedef std::vector<Ring>                        Zone;
+using namespace std;
 
 /*
     @brief PathWork ROS Node.
 */
-bool point_z_cmp(PointType a, PointType b) {
+template <typename PointT>
+bool point_z_cmp(PointT a, PointT b) {
     return a.z < b.z;
 }
 
+template <typename PointT>
 class PatchWork {
+
 public:
+    typedef std::vector<pcl::PointCloud<PointT> > Ring;
+    typedef std::vector<Ring> Zone;
+
     PatchWork() {};
 
     PatchWork(ros::NodeHandle *nh) : node_handle_(*nh) {
@@ -88,12 +90,15 @@ public:
         cout << (boost::format("Num. sectors: %d, %d, %d, %d") % num_sectors_each_zone_[0] % num_sectors_each_zone_[1] %
                  num_sectors_each_zone_[2] %
                  num_sectors_each_zone_[3]).str() << endl;
-        cout << (boost::format("Num. rings: %01d, %01d, %01d, %01d") % num_rings_each_zone_[0] % num_rings_each_zone_[1] %
+        cout << (boost::format("Num. rings: %01d, %01d, %01d, %01d") % num_rings_each_zone_[0] %
+                 num_rings_each_zone_[1] %
                  num_rings_each_zone_[2] %
                  num_rings_each_zone_[3]).str() << endl;
-        cout << (boost::format("elevation_thr_: %0.4f, %0.4f, %0.4f, %0.4f ") % elevation_thr_[0] % elevation_thr_[1] % elevation_thr_[2] %
+        cout << (boost::format("elevation_thr_: %0.4f, %0.4f, %0.4f, %0.4f ") % elevation_thr_[0] % elevation_thr_[1] %
+                 elevation_thr_[2] %
                  elevation_thr_[3]).str() << endl;
-        cout << (boost::format("flatness_thr_: %0.4f, %0.4f, %0.4f, %0.4f ") % flatness_thr_[0] % flatness_thr_[1] % flatness_thr_[2] %
+        cout << (boost::format("flatness_thr_: %0.4f, %0.4f, %0.4f, %0.4f ") % flatness_thr_[0] % flatness_thr_[1] %
+                 flatness_thr_[2] %
                  flatness_thr_[3]).str() << endl;
         num_rings_of_interest_ = elevation_thr_.size();
 
@@ -107,7 +112,7 @@ public:
         regionwise_ground_.reserve(NUM_HEURISTIC_MAX_PTS_IN_PATCH);
         regionwise_nonground_.reserve(NUM_HEURISTIC_MAX_PTS_IN_PATCH);
 
-        PlaneViz      = node_handle_.advertise<jsk_recognition_msgs::PolygonArray>("/gpf/plane", 100);
+        PlaneViz = node_handle_.advertise<jsk_recognition_msgs::PolygonArray>("/gpf/plane", 100);
         revert_pc_pub = node_handle_.advertise<sensor_msgs::PointCloud2>("/revert_pc", 100);
         reject_pc_pub = node_handle_.advertise<sensor_msgs::PointCloud2>("/reject_pc", 100);
 
@@ -115,11 +120,11 @@ public:
         min_range_z3_ = (3 * min_range_ + max_range_) / 4.0;
         min_range_z4_ = (min_range_ + max_range_) / 2.0;
 
-        min_ranges   = {min_range_, min_range_z2_, min_range_z3_, min_range_z4_};
-        ring_sizes   = {(min_range_z2_ - min_range_) / num_rings_each_zone_.at(0),
-                        (min_range_z3_ - min_range_z2_) / num_rings_each_zone_.at(1),
-                        (min_range_z4_ - min_range_z3_) / num_rings_each_zone_.at(2),
-                        (max_range_ - min_range_z4_) / num_rings_each_zone_.at(3)};
+        min_ranges = {min_range_, min_range_z2_, min_range_z3_, min_range_z4_};
+        ring_sizes = {(min_range_z2_ - min_range_) / num_rings_each_zone_.at(0),
+                      (min_range_z3_ - min_range_z2_) / num_rings_each_zone_.at(1),
+                      (min_range_z4_ - min_range_z3_) / num_rings_each_zone_.at(2),
+                      (max_range_ - min_range_z4_) / num_rings_each_zone_.at(3)};
         sector_sizes = {2 * M_PI / num_sectors_each_zone_.at(0), 2 * M_PI / num_sectors_each_zone_.at(1),
                         2 * M_PI / num_sectors_each_zone_.at(2),
                         2 * M_PI / num_sectors_each_zone_.at(3)};
@@ -133,9 +138,9 @@ public:
     }
 
     void estimate_ground(
-            const pcl::PointCloud<PointType> &cloudIn,
-            pcl::PointCloud<PointType> &cloudOut,
-            pcl::PointCloud<PointType> &cloudNonground,
+            const pcl::PointCloud<PointT> &cloudIn,
+            pcl::PointCloud<PointT> &cloudOut,
+            pcl::PointCloud<PointT> &cloudNonground,
             double &time_taken);
 
     geometry_msgs::PolygonStamped set_plane_polygon(const MatrixXf &normal_v, const float &d);
@@ -164,16 +169,16 @@ private:
 
     bool verbose_;
 
-    float           d_;
-    MatrixXf        normal_;
-    VectorXf        singular_values_;
-    float           th_dist_d_;
+    float d_;
+    MatrixXf normal_;
+    VectorXf singular_values_;
+    float th_dist_d_;
     Eigen::Matrix3f cov_;
     Eigen::Vector4f pc_mean_;
-    double          ring_size;
-    double          sector_size;
+    double ring_size;
+    double sector_size;
     // For visualization
-    bool            visualize_;
+    bool visualize_;
 
     vector<int> num_sectors_each_zone_;
     vector<int> num_rings_each_zone_;
@@ -188,13 +193,13 @@ private:
 
     jsk_recognition_msgs::PolygonArray poly_list_;
 
-    ros::Publisher             PlaneViz, revert_pc_pub, reject_pc_pub;
-    pcl::PointCloud<PointType> revert_pc, reject_pc;
-    pcl::PointCloud<PointType> ground_pc_;
-    pcl::PointCloud<PointType> non_ground_pc_;
+    ros::Publisher PlaneViz, revert_pc_pub, reject_pc_pub;
+    pcl::PointCloud<PointT> revert_pc, reject_pc;
+    pcl::PointCloud<PointT> ground_pc_;
+    pcl::PointCloud<PointT> non_ground_pc_;
 
-    pcl::PointCloud<PointType> regionwise_ground_;
-    pcl::PointCloud<PointType> regionwise_nonground_;
+    pcl::PointCloud<PointT> regionwise_ground_;
+    pcl::PointCloud<PointT> regionwise_nonground_;
 
     void initialize_zone(Zone &z, int num_sectors, int num_rings);
 
@@ -206,20 +211,20 @@ private:
 
     double xy2radius(const double &x, const double &y);
 
-    void pc2czm(const pcl::PointCloud<PointType> &src, std::vector<Zone> &czm);
+    void pc2czm(const pcl::PointCloud<PointT> &src, std::vector<Zone> &czm);
 
-    void estimate_plane_(const pcl::PointCloud<PointType> &ground);
+    void estimate_plane_(const pcl::PointCloud<PointT> &ground);
 
     void extract_piecewiseground(
-            const int zone_idx, const pcl::PointCloud<PointType> &src,
-            pcl::PointCloud<PointType> &dst,
-            pcl::PointCloud<PointType> &non_ground_dst);
+            const int zone_idx, const pcl::PointCloud<PointT> &src,
+            pcl::PointCloud<PointT> &dst,
+            pcl::PointCloud<PointT> &non_ground_dst);
 
-    void estimate_plane_(const int zone_idx, const pcl::PointCloud<PointType> &ground);
+    void estimate_plane_(const int zone_idx, const pcl::PointCloud<PointT> &ground);
 
     void extract_initial_seeds_(
-            const int zone_idx, const pcl::PointCloud<PointType> &p_sorted,
-            pcl::PointCloud<PointType> &init_seeds);
+            const int zone_idx, const pcl::PointCloud<PointT> &p_sorted,
+            pcl::PointCloud<PointT> &init_seeds);
 
     /***
      * For visulization of Ground Likelihood Estimation
@@ -237,12 +242,12 @@ private:
 
 };
 
-
-void PatchWork::initialize_zone(Zone &z, int num_sectors, int num_rings) {
+template<typename PointT> inline
+void PatchWork<PointT>::initialize_zone(Zone &z, int num_sectors, int num_rings) {
     z.clear();
-    pcl::PointCloud<PointType> cloud;
+    pcl::PointCloud<PointT> cloud;
     cloud.reserve(1000);
-    Ring     ring;
+    Ring ring;
     for (int i = 0; i < num_sectors; i++) {
         ring.emplace_back(cloud);
     }
@@ -251,7 +256,8 @@ void PatchWork::initialize_zone(Zone &z, int num_sectors, int num_rings) {
     }
 }
 
-void PatchWork::flush_patches_in_zone(Zone &patches, int num_sectors, int num_rings) {
+template<typename PointT> inline
+void PatchWork<PointT>::flush_patches_in_zone(Zone &patches, int num_sectors, int num_rings) {
     for (int i = 0; i < num_sectors; i++) {
         for (int j = 0; j < num_rings; j++) {
             if (!patches[j][i].points.empty()) patches[j][i].points.clear();
@@ -259,8 +265,8 @@ void PatchWork::flush_patches_in_zone(Zone &patches, int num_sectors, int num_ri
     }
 }
 
-
-void PatchWork::estimate_plane_(const pcl::PointCloud<PointType> &ground) {
+template<typename PointT> inline
+void PatchWork<PointT>::estimate_plane_(const pcl::PointCloud<PointT> &ground) {
     pcl::computeMeanAndCovarianceMatrix(ground, cov_, pc_mean_);
     // Singular Value Decomposition: SVD
     Eigen::JacobiSVD<Eigen::MatrixXf> svd(cov_, Eigen::DecompositionOptions::ComputeFullU);
@@ -272,19 +278,20 @@ void PatchWork::estimate_plane_(const pcl::PointCloud<PointType> &ground) {
     Eigen::Vector3f seeds_mean = pc_mean_.head<3>();
 
     // according to normal.T*[x,y,z] = -d
-    d_         = -(normal_.transpose() * seeds_mean)(0, 0);
+    d_ = -(normal_.transpose() * seeds_mean)(0, 0);
     // set distance threhold to `th_dist - d`
     th_dist_d_ = th_dist_ - d_;
 }
 
-void PatchWork::extract_initial_seeds_(
-        const int zone_idx, const pcl::PointCloud<PointType> &p_sorted,
-        pcl::PointCloud<PointType> &init_seeds) {
+template<typename PointT> inline
+void PatchWork<PointT>::extract_initial_seeds_(
+        const int zone_idx, const pcl::PointCloud<PointT> &p_sorted,
+        pcl::PointCloud<PointT> &init_seeds) {
     init_seeds.points.clear();
 
     // LPR is the mean of low point representative
     double sum = 0;
-    int    cnt = 0;
+    int cnt = 0;
 
     int init_idx = 0;
     if (zone_idx == 0) {
@@ -298,11 +305,11 @@ void PatchWork::extract_initial_seeds_(
     }
 
     // Calculate the mean height value.
-    for (int i          = init_idx; i < p_sorted.points.size() && cnt < num_lpr_; i++) {
+    for (int i = init_idx; i < p_sorted.points.size() && cnt < num_lpr_; i++) {
         sum += p_sorted.points[i].z;
         cnt++;
     }
-    double   lpr_height = cnt != 0 ? sum / cnt : 0;// in case divide by 0
+    double lpr_height = cnt != 0 ? sum / cnt : 0;// in case divide by 0
 
     // iterate pointcloud, filter those height is less than lpr.height+th_seeds_
     for (int i = 0; i < p_sorted.points.size(); i++) {
@@ -318,10 +325,12 @@ void PatchWork::extract_initial_seeds_(
     PointCloud SensorMsg -> Pointcloud -> z-value sorted Pointcloud
     ->error points removal -> extract ground seeds -> ground plane fit mainloop
 */
-void PatchWork::estimate_ground(
-        const pcl::PointCloud<PointType> &cloudIn,
-        pcl::PointCloud<PointType> &cloudOut,
-        pcl::PointCloud<PointType> &cloudNonground,
+
+template<typename PointT> inline
+void PatchWork<PointT>::estimate_ground(
+        const pcl::PointCloud<PointT> &cloud_in,
+        pcl::PointCloud<PointT> &cloud_out,
+        pcl::PointCloud<PointT> &cloud_nonground,
         double &time_taken) {
     poly_list_.header.stamp = ros::Time::now();
     if (!poly_list_.polygons.empty()) poly_list_.polygons.clear();
@@ -332,21 +341,21 @@ void PatchWork::estimate_ground(
     double t_total_ground = 0.0;
     double t_total_estimate = 0.0;
     // 1.Msg to pointcloud
-    pcl::PointCloud<PointType> laserCloudIn;
-    laserCloudIn = cloudIn;
+    pcl::PointCloud<PointT> laserCloudIn;
+    laserCloudIn = cloud_in;
 
     start = ros::Time::now().toSec();
 
     // 2.Sort on Z-axis value.
-    sort(laserCloudIn.points.begin(), laserCloudIn.end(), point_z_cmp);
+    sort(laserCloudIn.points.begin(), laserCloudIn.end(), point_z_cmp<PointT>);
 
     t0 = ros::Time::now().toSec();
     // 3.Error point removal
     // As there are some error mirror reflection under the ground,
     // here regardless point under 1.8* sensor_height
     // Sort point according to height, here uses z-axis in default
-    pcl::PointCloud<PointType>::iterator it = laserCloudIn.points.begin();
-    for (int                             i  = 0; i < laserCloudIn.points.size(); i++) {
+    auto it = laserCloudIn.points.begin();
+    for (int i = 0; i < laserCloudIn.points.size(); i++) {
         if (laserCloudIn.points[i].z < -1.8 * sensor_height_) {
             it++;
         } else {
@@ -364,14 +373,14 @@ void PatchWork::estimate_ground(
 
     t2 = ros::Time::now().toSec();
 
-    cloudOut.clear();
-    cloudNonground.clear();
+    cloud_out.clear();
+    cloud_nonground.clear();
     revert_pc.clear();
     reject_pc.clear();
 
     int concentric_idx = 0;
     for (int k = 0; k < num_zones_; ++k) {
-        auto          zone     = ConcentricZoneModel_[k];
+        auto zone = ConcentricZoneModel_[k];
         for (uint16_t ring_idx = 0; ring_idx < num_rings_each_zone_[k]; ++ring_idx) {
             for (uint16_t sector_idx = 0; sector_idx < num_sectors_each_zone_[k]; ++sector_idx) {
                 if (zone[ring_idx][sector_idx].points.size() > num_min_pts_) {
@@ -382,52 +391,58 @@ void PatchWork::estimate_ground(
 
                     // Status of each patch
                     // used in checking uprightness, elevation, and flatness, respectively
-                    const double ground_z_vec       = abs(normal_(2, 0));
+                    const double ground_z_vec = abs(normal_(2, 0));
                     const double ground_z_elevation = pc_mean_(2, 0);
-                    const double surface_variable   =
-                                         singular_values_.minCoeff() / (singular_values_(0) + singular_values_(1) + singular_values_(2));
+                    const double surface_variable =
+                            singular_values_.minCoeff() /
+                            (singular_values_(0) + singular_values_(1) + singular_values_(2));
 
                     if (visualize_) {
                         auto polygons = set_polygons(k, ring_idx, sector_idx, 3);
                         polygons.header = poly_list_.header;
                         poly_list_.polygons.push_back(polygons);
-                        set_ground_likelihood_estimation_status(k, ring_idx, concentric_idx, ground_z_vec, ground_z_elevation, surface_variable);
+                        set_ground_likelihood_estimation_status(k, ring_idx, concentric_idx, ground_z_vec,
+                                                                ground_z_elevation, surface_variable);
                     }
 
                     double t_tmp2 = ros::Time::now().toSec();
                     if (ground_z_vec < uprightness_thr_) {
                         // All points are rejected
-                        cloudNonground += regionwise_ground_;
-                        cloudNonground += regionwise_nonground_;
+                        cloud_nonground += regionwise_ground_;
+                        cloud_nonground += regionwise_nonground_;
                     } else { // satisfy uprightness
                         if (concentric_idx < num_rings_of_interest_) {
                             if (ground_z_elevation > elevation_thr_[ring_idx + 2 * k]) {
                                 if (flatness_thr_[ring_idx + 2 * k] > surface_variable) {
                                     if (verbose_) {
-                                        std::cout << "\033[1;36m[Flatness] Recovery operated. Check " << ring_idx + 2 * k
-                                                  << "th param. flatness_thr_: " << flatness_thr_[ring_idx + 2 * k] << " > "
+                                        std::cout << "\033[1;36m[Flatness] Recovery operated. Check "
+                                                  << ring_idx + 2 * k
+                                                  << "th param. flatness_thr_: " << flatness_thr_[ring_idx + 2 * k]
+                                                  << " > "
                                                   << surface_variable << "\033[0m" << std::endl;
                                         revert_pc += regionwise_ground_;
                                     }
-                                    cloudOut += regionwise_ground_;
-                                    cloudNonground += regionwise_nonground_;
+                                    cloud_out += regionwise_ground_;
+                                    cloud_nonground += regionwise_nonground_;
                                 } else {
                                     if (verbose_) {
-                                        std::cout << "\033[1;34m[Elevation] Rejection operated. Check " << ring_idx + 2 * k
-                                                  << "th param. of elevation_thr_: " << elevation_thr_[ring_idx + 2 * k] << " < "
+                                        std::cout << "\033[1;34m[Elevation] Rejection operated. Check "
+                                                  << ring_idx + 2 * k
+                                                  << "th param. of elevation_thr_: " << elevation_thr_[ring_idx + 2 * k]
+                                                  << " < "
                                                   << ground_z_elevation << "\033[0m" << std::endl;
                                         reject_pc += regionwise_ground_;
                                     }
-                                    cloudNonground += regionwise_ground_;
-                                    cloudNonground += regionwise_nonground_;
+                                    cloud_nonground += regionwise_ground_;
+                                    cloud_nonground += regionwise_nonground_;
                                 }
                             } else {
-                                cloudOut += regionwise_ground_;
-                                cloudNonground += regionwise_nonground_;
+                                cloud_out += regionwise_ground_;
+                                cloud_nonground += regionwise_nonground_;
                             }
                         } else {
-                            cloudOut += regionwise_ground_;
-                            cloudNonground += regionwise_nonground_;
+                            cloud_out += regionwise_ground_;
+                            cloud_nonground += regionwise_nonground_;
                         }
                     }
                     double t_tmp3 = ros::Time::now().toSec();
@@ -437,7 +452,7 @@ void PatchWork::estimate_ground(
             ++concentric_idx;
         }
     }
-    end        = ros::Time::now().toSec();
+    end = ros::Time::now().toSec();
     time_taken = end - start;
 //    ofstream time_txt("/home/shapelim/patchwork_time_anal.txt", std::ios::app);
 //    time_txt<<t0 - start<<" "<<t1 - t0 <<" "<<t2-t1<<" "<<t_total_ground<< " "<<t_total_estimate<<"\n";
@@ -446,27 +461,30 @@ void PatchWork::estimate_ground(
     if (verbose_) {
         sensor_msgs::PointCloud2 cloud_ROS;
         pcl::toROSMsg(revert_pc, cloud_ROS);
-        cloud_ROS.header.stamp    = ros::Time::now();
+        cloud_ROS.header.stamp = ros::Time::now();
         cloud_ROS.header.frame_id = "/map";
         revert_pc_pub.publish(cloud_ROS);
         pcl::toROSMsg(reject_pc, cloud_ROS);
-        cloud_ROS.header.stamp    = ros::Time::now();
+        cloud_ROS.header.stamp = ros::Time::now();
         cloud_ROS.header.frame_id = "/map";
         reject_pc_pub.publish(cloud_ROS);
     }
     PlaneViz.publish(poly_list_);
 }
 
-double PatchWork::calc_principal_variance(const Eigen::Matrix3f &cov, const Eigen::Vector4f &centroid) {
-    double angle       = atan2(centroid(1, 0), centroid(0, 0)); // y, x
-    double c           = cos(angle);
-    double s           = sin(angle);
+template<typename PointT> inline
+double PatchWork<PointT>::calc_principal_variance(const Eigen::Matrix3f &cov, const Eigen::Vector4f &centroid) {
+    double angle = atan2(centroid(1, 0), centroid(0, 0)); // y, x
+    double c = cos(angle);
+    double s = sin(angle);
     double var_x_prime = c * c * cov(0, 0) + s * s * cov(1, 1) + 2 * c * s * cov(0, 1);
     double var_y_prime = s * s * cov(0, 0) + c * c * cov(1, 1) - 2 * c * s * cov(0, 1);
     return max(var_x_prime, var_y_prime);
 }
 
-double PatchWork::xy2theta(const double &x, const double &y) { // 0 ~ 2 * PI
+
+template<typename PointT> inline
+double PatchWork<PointT>::xy2theta(const double &x, const double &y) { // 0 ~ 2 * PI
     if (y >= 0) {
         return atan2(y, x); // 1, 2 quadrant
     } else {
@@ -474,32 +492,34 @@ double PatchWork::xy2theta(const double &x, const double &y) { // 0 ~ 2 * PI
     }
 }
 
-double PatchWork::xy2radius(const double &x, const double &y) {
+template<typename PointT> inline
+double PatchWork<PointT>::xy2radius(const double &x, const double &y) {
     return sqrt(pow(x, 2) + pow(y, 2));
 }
 
-void PatchWork::pc2czm(const pcl::PointCloud<PointXYZILID> &src, std::vector<Zone> &czm) {
+template<typename PointT> inline
+void PatchWork<PointT>::pc2czm(const pcl::PointCloud<PointT> &src, std::vector<Zone> &czm) {
 
     for (auto const &pt : src.points) {
-        int    ring_idx, sector_idx;
+        int ring_idx, sector_idx;
         double r = xy2radius(pt.x, pt.y);
         if ((r <= max_range_) && (r > min_range_)) {
             double theta = xy2theta(pt.x, pt.y);
 
             if (r < min_range_z2_) { // In First rings
-                ring_idx   = min(static_cast<int>(((r - min_range_) / ring_sizes[0])), num_rings_each_zone_[0] - 1);
+                ring_idx = min(static_cast<int>(((r - min_range_) / ring_sizes[0])), num_rings_each_zone_[0] - 1);
                 sector_idx = min(static_cast<int>((theta / sector_sizes[0])), num_sectors_each_zone_[0] - 1);
                 czm[0][ring_idx][sector_idx].points.emplace_back(pt);
             } else if (r < min_range_z3_) {
-                ring_idx   = min(static_cast<int>(((r - min_range_z2_) / ring_sizes[1])), num_rings_each_zone_[1] - 1);
+                ring_idx = min(static_cast<int>(((r - min_range_z2_) / ring_sizes[1])), num_rings_each_zone_[1] - 1);
                 sector_idx = min(static_cast<int>((theta / sector_sizes[1])), num_sectors_each_zone_[1] - 1);
                 czm[1][ring_idx][sector_idx].points.emplace_back(pt);
             } else if (r < min_range_z4_) {
-                ring_idx   = min(static_cast<int>(((r - min_range_z3_) / ring_sizes[2])), num_rings_each_zone_[2] - 1);
+                ring_idx = min(static_cast<int>(((r - min_range_z3_) / ring_sizes[2])), num_rings_each_zone_[2] - 1);
                 sector_idx = min(static_cast<int>((theta / sector_sizes[2])), num_sectors_each_zone_[2] - 1);
                 czm[2][ring_idx][sector_idx].points.emplace_back(pt);
             } else { // Far!
-                ring_idx   = min(static_cast<int>(((r - min_range_z4_) / ring_sizes[3])), num_rings_each_zone_[3] - 1);
+                ring_idx = min(static_cast<int>(((r - min_range_z4_) / ring_sizes[3])), num_rings_each_zone_[3] - 1);
                 sector_idx = min(static_cast<int>((theta / sector_sizes[3])), num_sectors_each_zone_[3] - 1);
                 czm[3][ring_idx][sector_idx].points.emplace_back(pt);
             }
@@ -509,10 +529,11 @@ void PatchWork::pc2czm(const pcl::PointCloud<PointXYZILID> &src, std::vector<Zon
 }
 
 // For adaptive
-void PatchWork::extract_piecewiseground(
-        const int zone_idx, const pcl::PointCloud<PointXYZILID> &src,
-        pcl::PointCloud<PointXYZILID> &dst,
-        pcl::PointCloud<PointXYZILID> &non_ground_dst) {
+template<typename PointT> inline
+void PatchWork<PointT>::extract_piecewiseground(
+        const int zone_idx, const pcl::PointCloud<PointT> &src,
+        pcl::PointCloud<PointT> &dst,
+        pcl::PointCloud<PointT> &non_ground_dst) {
     // 0. Initialization
     if (!ground_pc_.empty()) ground_pc_.clear();
     if (!dst.empty()) dst.clear();
@@ -527,14 +548,14 @@ void PatchWork::extract_piecewiseground(
 
         //pointcloud to matrix
         Eigen::MatrixXf points(src.points.size(), 3);
-        int             j      = 0;
-        for (auto       &p:src.points) {
+        int j = 0;
+        for (auto &p:src.points) {
             points.row(j++) << p.x, p.y, p.z;
         }
         // ground plane model
         Eigen::VectorXf result = points * normal_;
         // threshold filter
-        for (int        r      = 0; r < result.rows(); r++) {
+        for (int r = 0; r < result.rows(); r++) {
             if (i < num_iter_ - 1) {
                 if (result[r] < th_dist_d_) {
                     ground_pc_.points.push_back(src[r]);
@@ -553,10 +574,11 @@ void PatchWork::extract_piecewiseground(
 }
 
 
-geometry_msgs::PolygonStamped PatchWork::set_polygons(int r_idx, int theta_idx, int num_split) {
+template<typename PointT> inline
+geometry_msgs::PolygonStamped PatchWork<PointT>::set_polygons(int r_idx, int theta_idx, int num_split) {
     geometry_msgs::PolygonStamped polygons;
     // Set point of polygon. Start from RL and ccw
-    geometry_msgs::Point32        point;
+    geometry_msgs::Point32 point;
 
     // RL
     double r_len = r_idx * ring_size + min_range_;
@@ -599,15 +621,16 @@ geometry_msgs::PolygonStamped PatchWork::set_polygons(int r_idx, int theta_idx, 
     return polygons;
 }
 
-geometry_msgs::PolygonStamped PatchWork::set_polygons(int zone_idx, int r_idx, int theta_idx, int num_split) {
+template<typename PointT> inline
+geometry_msgs::PolygonStamped PatchWork<PointT>::set_polygons(int zone_idx, int r_idx, int theta_idx, int num_split) {
     geometry_msgs::PolygonStamped polygons;
     // Set point of polygon. Start from RL and ccw
-    geometry_msgs::Point32        point;
+    geometry_msgs::Point32 point;
 
     // RL
     double zone_min_range = min_ranges[zone_idx];
-    double r_len          = r_idx * ring_sizes[zone_idx] + zone_min_range;
-    double angle          = theta_idx * sector_sizes[zone_idx];
+    double r_len = r_idx * ring_sizes[zone_idx] + zone_min_range;
+    double angle = theta_idx * sector_sizes[zone_idx];
 
     point.x = r_len * cos(angle);
     point.y = r_len * sin(angle);
@@ -646,7 +669,8 @@ geometry_msgs::PolygonStamped PatchWork::set_polygons(int zone_idx, int r_idx, i
     return polygons;
 }
 
-void PatchWork::set_ground_likelihood_estimation_status(
+template<typename PointT> inline
+void PatchWork<PointT>::set_ground_likelihood_estimation_status(
         const int k, const int ring_idx,
         const int concentrix_idx,
         const double z_vec,

@@ -21,7 +21,8 @@ ros::Publisher FNPublisher;
 ros::Publisher PrecisionPublisher;
 ros::Publisher RecallPublisher;
 
-boost::shared_ptr<PatchWork> PatchworkGroundSeg;
+using PointType = PointXYZILID;
+boost::shared_ptr<PatchWork<PointType> > PatchworkGroundSeg;
 
 std::string output_filename;
 std::string acc_filename, pcd_savepath;
@@ -140,7 +141,7 @@ int main(int argc, char **argv) {
     nh.param<string>("/algorithm", algorithm, "patchwork");
     nh.param<string>("/seq", seq, "00");
 
-    PatchworkGroundSeg.reset(new PatchWork(&nh));
+    PatchworkGroundSeg.reset(new PatchWork<PointType>(&nh));
 
     CloudPublisher  = nh.advertise<sensor_msgs::PointCloud2>("/benchmark/cloud", 100);
     TPPublisher     = nh.advertise<sensor_msgs::PointCloud2>("/benchmark/TP", 100);
@@ -152,7 +153,6 @@ int main(int argc, char **argv) {
 
     ros::Subscriber NodeSubscriber = nh.subscribe<patchwork::node>("/node", 5000, callbackNode);
 
-    kitt
     ros::spin();
 
     return 0;
