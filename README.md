@@ -1,6 +1,10 @@
 # Patchwork
 
-Official page of *"Patchwork: Concentric Zone-based Region-wise Ground Segmentation with Ground Likelihood Estimation Using a 3D LiDAR Sensor"*, which is accepted by RA-L with ICRA'21 option [[Demo Video](https://www.youtube.com/watch?v=Nx27ZO8afm0)] .
+Official page of *"Patchwork: Concentric Zone-based Region-wise Ground Segmentation with Ground Likelihood Estimation Using a 3D LiDAR Sensor"*, which is accepted by RA-L with IROS'21 option [[Demo Video](https://www.youtube.com/watch?v=Nx27ZO8afm0)] .
+
+It's an overall updated version of [LLS-LOAM](https://github.com/YuePanEdward/LLS-LOAM). 
+
+#### [[Demo Video](https://www.youtube.com/watch?v=85bGD55e3-0&feature=youtu.be)] [[Preprint Paper](https://arxiv.org/abs/2102.03771)] [[Project Wiki](https://github.com/YuePanEdward/MULLS/wiki)]
 
 ![Image text](img/patchwork.gif)
 
@@ -60,6 +64,26 @@ $ roslaunch nonplanar_gpf gpf.launch
 roslaunch patchwork ground_semgentation.launch target_alg:="patchwork" target_seq:="00"
 ```
 
+
+```
+Base Folder
+_____00
+     |___velodyne [raw data *.bin]
+     |___pcd [*.pcd] (can be generated from *.bin by run_kittibin2pcd.sh)
+     |___labels [raw semantic label *.label] (optional for semantic aided lidar odometry) 
+     |___label_pcd [*.pcd] (optional for semantic aided lidar odometry, can be generated from *.label and *.bin by run_semantic_kitti_labelbin2pcd.sh) 
+     |___00.txt [ground truth (gnssins) pose] (optional for evaluation)
+     |___calib.txt [extrinsic transformation matrix (from body to lidar coordinate system)] (optional for evaluation)
+     |___result [output of MULLS: generated map, pose and evaluation] (would be generated automatically after the transaction) 
+_____01
+     |___velodyne
+     |___pcd
+     |___labels
+     |...
+_____...
+   
+```
+
 #### Point label 관련
 * point의 member 변수들은 `utils/common.hpp`에 나와있음: `x, y, z, intensity, label, id`로 구분됨. 여기서 id는 각 object의 아이디임 (본 레포에서는 안 쓰일듯)
 * label은 int로 돼있는데, 각 int가 나타내는 건 [SemanticKITTI API](https://github.com/PRBonn/semantic-kitti-api/blob/master/config/semantic-kitti.yaml)에 나와있음
@@ -84,5 +108,23 @@ If you use our code or method in your work, please consider citing the following
     year={2021}
     }
 
+---------
+
+### Contact
+
+If you have any questions, please let me know:
+
+- Hyungtae Lim {[shapelim@kaist.ac.kr]()}
+
+
+### TODO List
+
+- [x] Add ROS support
+- [ ] Add preprint paper
+- [ ] Add demo videos
+- [ ] Add demo examples
+- [ ] Update camera-ready paper
+
+-----
 
 

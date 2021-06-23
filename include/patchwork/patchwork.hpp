@@ -52,7 +52,7 @@ public:
         node_handle_.param("/patchwork/min_r", min_range_, 2.7); // It indicates bodysize of the car.
         node_handle_.param("/patchwork/uniform/num_rings", num_rings_, 30);
         node_handle_.param("/patchwork/uniform/num_sectors", num_sectors_, 108);
-        node_handle_.param("/patchwork/uprightness_thr", uprightness_thr_, 0.5); // The more larger, the more strict
+        node_handle_.param("/patchwork/uprightness_thr", uprightness_thr_, 0.5); // The larger, the more strict
         node_handle_.param("/patchwork/adaptive_seed_selection_margin", adaptive_seed_selection_margin_,
                            -1.1); // The more larger, the more soft
 
@@ -230,6 +230,7 @@ private:
 
     void set_ground_likelihood_estimation_status(
             const int k, const int ring_idx,
+            const int concentric_idx,
             const double z_vec,
             const double z_elevation,
             const double surface_variable);
@@ -368,6 +369,7 @@ void PatchWork::estimate_ground(
     revert_pc.clear();
     reject_pc.clear();
 
+    int concentric_idx = 0;
     for (int k = 0; k < num_zones_; ++k) {
         auto          zone     = ConcentricZoneModel_[k];
         for (uint16_t ring_idx = 0; ring_idx < num_rings_each_zone_[k]; ++ring_idx) {
@@ -389,7 +391,7 @@ void PatchWork::estimate_ground(
                         auto polygons = set_polygons(k, ring_idx, sector_idx, 3);
                         polygons.header = poly_list_.header;
                         poly_list_.polygons.push_back(polygons);
-                        set_ground_likelihood_estimation_status(k, ring_idx, ground_z_vec, ground_z_elevation, surface_variable);
+                        set_ground_likelihood_estimation_status(k, ring_idx, concentric_idx, ground_z_vec, ground_z_elevation, surface_variable);
                     }
 
                     double t_tmp2 = ros::Time::now().toSec();
@@ -398,7 +400,7 @@ void PatchWork::estimate_ground(
                         cloudNonground += regionwise_ground_;
                         cloudNonground += regionwise_nonground_;
                     } else { // satisfy uprightness
-                        if ((k < 2) && (ring_idx < 2)) {
+                        if (concentric_idx < num_rings_of_interest_) {
                             if (ground_z_elevation > elevation_thr_[ring_idx + 2 * k]) {
                                 if (flatness_thr_[ring_idx + 2 * k] > surface_variable) {
                                     if (verbose_) {
@@ -432,6 +434,7 @@ void PatchWork::estimate_ground(
                     t_total_estimate += t_tmp3 - t_tmp2;
                 }
             }
+            ++concentric_idx;
         }
     }
     end        = ros::Time::now().toSec();
@@ -645,11 +648,12 @@ geometry_msgs::PolygonStamped PatchWork::set_polygons(int zone_idx, int r_idx, i
 
 void PatchWork::set_ground_likelihood_estimation_status(
         const int k, const int ring_idx,
+        const int concentrix_idx,
         const double z_vec,
         const double z_elevation,
         const double surface_variable) {
     if (z_vec > uprightness_thr_) { //orthogonal
-        if ((k < 2) && (ring_idx < 2)) {
+        if (concentrix_idx < num_rings_of_interest_) {
             if (z_elevation > elevation_thr_[ring_idx + 2 * k]) {
                 if (flatness_thr_[ring_idx + 2 * k] > surface_variable) {
                     poly_list_.likelihood.push_back(FLAT_ENOUGH);
