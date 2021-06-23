@@ -2,20 +2,29 @@
 
 Official page of *"Patchwork: Concentric Zone-based Region-wise Ground Segmentation with Ground Likelihood Estimation Using a 3D LiDAR Sensor"*, which is accepted by RA-L with IROS'21 option [[Demo Video](https://www.youtube.com/watch?v=Nx27ZO8afm0)] .
 
-It's an overall updated version of [LLS-LOAM](https://github.com/YuePanEdward/LLS-LOAM). 
-
 #### [[Demo Video](https://www.youtube.com/watch?v=85bGD55e3-0&feature=youtu.be)] [[Preprint Paper](https://arxiv.org/abs/2102.03771)] [[Project Wiki](https://github.com/YuePanEdward/MULLS/wiki)]
 
+
 ![Image text](img/patchwork.gif)
+
+It's an overall updated version of **R-GPF of ERASOR** [[Code]](https://github.com/LimHyungTae/ERASOR) of [[Paper]](https://arxiv.org/abs/2103.04316). 
+
+
+Many demo videos are also available: (TBU)
+* Terrain dataset
+* KITTI 05
+* Korea Univ.
+
 
 ### Characteristics
 
 * Single hpp file (include/patchwork/patchwork.hpp)
 
-* Ground Consistency
+* Robust ground consistency
 
-As shown in the below gif, our method shows most promising robust performance compared with other state-of-the-art methods.
+As shown in the below gif, our method shows most promising robust performance compared with other state-of-the-art methods. (Since ground is uneven, so the algorithms are not sure about the optimality of fitting of the ground.
 
+Please kindly note that the concept of *traversable area* and the *ground* in thie repo. is quite different! Please refer to our paper.
 
 
 ## Contents
@@ -26,6 +35,7 @@ As shown in the below gif, our method shows most promising robust performance co
 0. [Citation](#citation)
 
 ### Test Env.
+
 The code is tested successfully at
 * Linux 18.04 LTS
 * ROS Melodic
