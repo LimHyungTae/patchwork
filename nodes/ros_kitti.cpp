@@ -9,6 +9,9 @@
 #include "patchwork/patchwork.hpp"
 #include <visualization_msgs/Marker.h>
 
+#include "tools/kitti_loader.hpp"
+#include "tools/pcd_loader.hpp"
+
 using namespace std;
 
 ros::Publisher CloudPublisher;
@@ -149,6 +152,7 @@ int main(int argc, char **argv) {
 
     ros::Subscriber NodeSubscriber = nh.subscribe<patchwork::node>("/node", 5000, callbackNode);
 
+    kitt
     ros::spin();
 
     return 0;

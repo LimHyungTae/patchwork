@@ -1,20 +1,51 @@
 # Patchwork
 
-Official page of [*"ERASOR: Egocentric Ratio of Pseudo Occupancy-based Dynamic Object Removal for Static 3D Point Cloud Map Building"*](https://arxiv.org/abs/2103.04316), which is accepted by RA-L with ICRA'21 option [[Demo Video](https://www.youtube.com/watch?v=Nx27ZO8afm0)].
+Official page of *"Patchwork: Concentric Zone-based Region-wise Ground Segmentation with Ground Likelihood Estimation Using a 3D LiDAR Sensor"*, which is accepted by RA-L with ICRA'21 option [[Demo Video](https://www.youtube.com/watch?v=Nx27ZO8afm0)] .
 
 ![Image text](img/patchwork.gif)
 
+### Characteristics
+
+* Single hpp file (include/patchwork/patchwork.hpp)
+
+* Ground Consistency
+
+As shown in the below gif, our method shows most promising robust performance compared with other state-of-the-art methods.
+
+
+
+## Contents
+0. [Test Env.](#Test-Env.)
+0. [Requirements](#requirements)
+0. [How to Run Patchwork](#How-to-Run-Patchwork)
+0. [Benchmark](#benchmark)
+0. [Citation](#citation)
+
+### Test Env.
+The code is tested successfully at
+* Linux 18.04 LTS
+* ROS Melodic
+
 ## Requirements
 
-* unavlib
-* jsk_visualization
-* ceres: CMakeLists.txt에서 target_link_libraries에 ceres로 써야 함!
+### ROS Setting
+- Install [ROS](http://torch.ch/docs/getting-started.html) on a machine. 
+- Also, [jsk-visualization](https://github.com/jsk-ros-pkg/jsk_visualization) is required to visualize Ground Likelihood Estimation status.
 
-jsk_visualization는 향후 plane marker를 그릴 때 유용함.
+```bash
+sudo apt-get install ros-melodic-jsk-recognition
+sudo apt-get install ros-melodic-jsk-common-msgs
+sudo apt-get install ros-melodic-jsk-rviz-plugins
+```
 
 [여기](https://limhyungtae.github.io/2020-09-05-ROS-jsk_visualization-%EC%84%A4%EC%B9%98%ED%95%98%EB%8A%94-%EB%B2%95/)를 보고 따라 설치하면 됨
 
-## How to use
+## How to Run Patchwork
+
+We provide three examples
+* Offline KITTI dataset
+* Onine (ROS Callback) KITTI dataset
+* Own dataset using pcd files
 
 ```
 $ roslaunch nonplanar_gpf gpf.launch
@@ -26,7 +57,7 @@ $ roslaunch nonplanar_gpf gpf.launch
 
 ## How to run
 ```
-roslaunch non_planar_gpf ground_semgentation.launch target_alg:="patchwork" target_seq:="00"
+roslaunch patchwork ground_semgentation.launch target_alg:="patchwork" target_seq:="00"
 ```
 
 #### Point label 관련
@@ -42,8 +73,16 @@ roslaunch non_planar_gpf ground_semgentation.launch target_alg:="patchwork" targ
 * c++에서는 결과를 저장하는 txt나 csv파일 형식으로 저장하고 분석을 파이썬을 이용해서 `scripts/analysis` 내에 만들길 권장
 * 현재 `scripts/analysis/output` 내를 보면 kitti 내에서 z의 변화에 대해서 visualization해둠!
 
-예시:
-![sequence00](scripts/analysis/output/00_z.png)
+## Citation
 
-## 현재 진행사항
+If you use our code or method in your work, please consider citing the following:
+
+	@article{lim2021patchwork,
+    title={Patchwork: Concentric Zone-based Region-wise Ground Segmentation with Ground Likelihood Estimation Using a 3D LiDAR Sensor},
+    author={Lim, Hyungtae and Minho, Oh and Myung, Hyun},
+    journal={IEEE Robotics and Automation Letters},
+    year={2021}
+    }
+
+
 

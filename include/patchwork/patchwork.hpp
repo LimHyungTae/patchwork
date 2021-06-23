@@ -3,7 +3,7 @@
 
 #include <sensor_msgs/PointCloud2.h>
 #include <ros/ros.h>
-#include "utils.hpp"
+#include "patchwork/utils.hpp"
 #include <jsk_recognition_msgs/PolygonArray.h>
 #include <Eigen/Dense>
 #include <boost/format.hpp>

@@ -36,7 +36,6 @@ generate_messages(
 
 find_package(PCL 1.7 REQUIRED)
 find_package(Boost 1.54 REQUIRED)
-find_package(Ceres REQUIRED)
 
 catkin_package(
         INCLUDE_DIRS
@@ -47,8 +46,7 @@ catkin_package(
 include_directories(
         ${catkin_INCLUDE_DIRS}
         ${PCL_INCLUDE_DIRS}
-        ${CERES_INCLUDE_DIRS}
-        src
+        include
 )
 
 #add_executable(classviz utils/viz_each_class.cpp utils/common.hpp)
@@ -68,11 +66,11 @@ include_directories(
 #add_dependencies(ceres_check nonplanar_gpf_generate_messages_cpp)
 
 
-set(alg_source
-    nodes/patchwork/utils.hpp
-    nodes/patchwork/patchwork.hpp
-    )
+add_executable(ros_kitti nodes/ros_kitti.cpp)
+target_link_libraries(ros_kitti ${catkin_LIBRARIES} ${PCL_LIBRARIES})
+add_dependencies(ros_kitti patchwork_generate_messages_cpp)
 
-add_executable(benchmark nodes/main.cpp ${alg_source})
-target_link_libraries(benchmark ${catkin_LIBRARIES} ${PCL_LIBRARIES} ceres)
-add_dependencies(benchmark patchwork_generate_messages_cpp)
+add_executable(offline_kitti nodes/offline_kitti.cpp)
+target_link_libraries(offline_kitti ${catkin_LIBRARIES} ${PCL_LIBRARIES})
+add_dependencies(offline_kitti patchwork_generate_messages_cpp)
+

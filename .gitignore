@@ -1,4 +1,5 @@
 cmake-build-release*
+cmake-build-debug*
 .idea*
 # Created by https://www.gitignore.io/api/c++,code,cmake,eclipse
 # Edit at https://www.gitignore.io/?templates=c++,code,cmake,eclipse
@@ -77,8 +78,6 @@ local.properties
 # External tool builders
 .externalToolBuilders/
 
-# Locally stored "Eclipse launch configurations"
-*.launch
 
 # PyDev specific (Python IDE for Eclipse)
 *.pydevproject
