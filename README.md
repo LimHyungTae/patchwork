@@ -32,7 +32,9 @@ It's an overall updated version of **R-GPF of ERASOR** [[Code](https://github.co
 
 * Robust ground consistency
 
-As shown in the demo videos, our method shows most promising robust performance compared with other state-of-the-art methods, especially, our method focuses on the little perturbation of precision/recall.
+As shown in the demo videos and below figure, our method shows most promising robust performance compared with other state-of-the-art methods, especially, our method focuses on the little perturbation of precision/recall.
+
+![](img/precision_recall.png)
 
 Please kindly note that the concept of *traversable area* and the *ground* is quite different! Please refer to our paper.
 
