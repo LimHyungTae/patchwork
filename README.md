@@ -8,20 +8,16 @@ Patchwork                  |  Concept of our method (GLE)
 :-------------------------:|:-------------------------:
 ![](img/patchwork_concept_resized.jpg) |  ![](img/patchwork.gif)
 
+It's an overall updated version of **R-GPF of ERASOR** [[Code]](https://github.com/LimHyungTae/ERASOR) [[Paper]](https://arxiv.org/abs/2103.04316). 
 
-![Image text](img/patchwork.gif)
+----
 
 #Demo
 KITTI 00                   |  Rough Terrain
 :-------------------------:|:-------------------------:
-![](img/patchwork.gif)  |  ![](img/patchwork.gif)
-It's an overall updated version of **R-GPF of ERASOR** [[Code]](https://github.com/LimHyungTae/ERASOR) of [[Paper]](https://arxiv.org/abs/2103.04316). 
+![](img/demo_kitti00.gif)  |  ![](img/demo_terrain.gif)
 
-
-Many demo videos are also available: (TBU)
-* Terrain dataset
-* KITTI 05
-* Korea Univ.
+----
 
 
 ### Characteristics
