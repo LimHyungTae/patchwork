@@ -4,7 +4,7 @@ Official page of *"Patchwork: Concentric Zone-based Region-wise Ground Segmentat
 
 #### [[Demo Video](https://youtu.be/rclqeDi4gow)] [[Preprint Paper](https://urserver.kaist.ac.kr/publicdata/patchwork/RA_L_21_patchwork_final_submission.pdf)] [[Project Wiki](https://github.com/LimHyungTae/patchwork/wiki)]
 
-Patchwork                  |  Concept of our method (GLE)
+Patchwork                  |  Concept of our method (CZM & GLE)
 :-------------------------:|:-------------------------:
 ![](img/patchwork_concept_resized.jpg) |  ![](img/patchwork.gif)
 
