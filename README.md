@@ -8,17 +8,17 @@ Patchwork                  |  Concept of our method (CZM & GLE)
 :-------------------------:|:-------------------------:
 ![](img/patchwork_concept_resized.jpg) |  ![](img/patchwork.gif)
 
-It's an overall updated version of **R-GPF of ERASOR** [[Code]](https://github.com/LimHyungTae/ERASOR) [[Paper]](https://arxiv.org/abs/2103.04316). 
+It's an overall updated version of **R-GPF of ERASOR** [[Code](https://github.com/LimHyungTae/ERASOR)] [[Paper](https://arxiv.org/abs/2103.04316)]. 
 
 ----
 
 # Demo
 
-### KITTI 00 
+## KITTI 00 
 
 ![](img/demo_kitti00_v2.gif)
 
-### Rough Terrain
+## Rough Terrain
 
 ![](img/demo_terrain_v3.gif)
 
@@ -31,9 +31,9 @@ It's an overall updated version of **R-GPF of ERASOR** [[Code]](https://github.c
 
 * Robust ground consistency
 
-As shown in the below gif, our method shows most promising robust performance compared with other state-of-the-art methods. (Since ground is uneven, so the algorithms are not sure about the optimality of fitting of the ground.
+As shown in the demo videos, our method shows most promising robust performance compared with other state-of-the-art methods, especially, our method focuses on the little perturbation of precision/recall.
 
-Please kindly note that the concept of *traversable area* and the *ground* in thie repo. is quite different! Please refer to our paper.
+Please kindly note that the concept of *traversable area* and the *ground* is quite different! Please refer to our paper.
 
 
 ## Contents
@@ -61,8 +61,6 @@ sudo apt-get install ros-melodic-jsk-common-msgs
 sudo apt-get install ros-melodic-jsk-rviz-plugins
 ```
 
-[여기](https://limhyungtae.github.io/2020-09-05-ROS-jsk_visualization-%EC%84%A4%EC%B9%98%ED%95%98%EB%8A%94-%EB%B2%95/)를 보고 따라 설치하면 됨
-
 ## How to Run Patchwork
 
 We provide three examples
@@ -76,13 +74,10 @@ $ roslaunch nonplanar_gpf gpf.launch
 
 현재 baseline인 gpf만 포팅해둔 상태임.
 
-## Descriptions
-
 ## How to run
 ```
 roslaunch patchwork ground_semgentation.launch target_alg:="patchwork" target_seq:="00"
 ```
-
 
 ```
 Base Folder
