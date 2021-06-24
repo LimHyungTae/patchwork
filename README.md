@@ -134,10 +134,10 @@ If you have any questions, please let me know:
 ### TODO List
 
 - [x] Add ROS support
-- [ ] Add preprint paper
-- [ ] Add demo videos
+- [x] Add preprint paper
+- [x] Add demo videos
 - [ ] Add demo examples
-- [ ] Update camera-ready paper
+- [ ] Update wiki
 
 -----
 
