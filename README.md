@@ -6,7 +6,7 @@ Official page of *"Patchwork: Concentric Zone-based Region-wise Ground Segmentat
 
 Patchwork                  |  Concept of our method (GLE)
 :-------------------------:|:-------------------------:
-![](img/patchwork_concept.jpg)  |  ![](img/patchwork.gif)
+![](img/patchwork_concept.jpg  =250x)  |  ![](img/patchwork.gif)
 
 
 ![Image text](img/patchwork.gif)
