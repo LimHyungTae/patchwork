@@ -12,10 +12,15 @@ It's an overall updated version of **R-GPF of ERASOR** [[Code]](https://github.c
 
 ----
 
-#Demo
-KITTI 00                   |  Rough Terrain
-:-------------------------:|:-------------------------:
-![](img/demo_kitti00.gif)  |  ![](img/demo_terrain.gif)
+# Demo
+
+### KITTI 00 
+
+![](img/demo_kitti00.gif)
+
+### Rough Terrain
+
+![](img/demo_terrain.gif)
 
 ----
 
