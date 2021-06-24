@@ -7,6 +7,10 @@ Official page of *"Patchwork: Concentric Zone-based Region-wise Ground Segmentat
 
 ![Image text](img/patchwork.gif)
 
+
+Solarized dark             |  Solarized Ocean
+:-------------------------:|:-------------------------:
+![](img/patchwork.gif)  |  ![](img/patchwork.gif)
 It's an overall updated version of **R-GPF of ERASOR** [[Code]](https://github.com/LimHyungTae/ERASOR) of [[Paper]](https://arxiv.org/abs/2103.04316). 
 
 
