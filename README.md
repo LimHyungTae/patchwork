@@ -151,6 +151,10 @@ If you use our code or method in your work, please consider citing the following
 
 ---------
 
+### Description
+
+All explanations of paramters and other experimental results will be uploaded in [wiki](https://github.com/LimHyungTae/patchwork/wiki)
+
 ### Contact
 
 If you have any questions, please let me know:
