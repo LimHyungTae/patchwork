@@ -16,11 +16,11 @@ It's an overall updated version of **R-GPF of ERASOR** [[Code]](https://github.c
 
 ### KITTI 00 
 
-![](img/demo_kitti00.gif)
+![](img/demo_kitti00_v2.gif)
 
 ### Rough Terrain
 
-![](img/demo_terrain.gif)
+![](img/demo_terrain_v3.gif)
 
 ----
 
