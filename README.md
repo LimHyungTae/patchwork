@@ -27,7 +27,7 @@ It's an overall updated version of **R-GPF of ERASOR** [[Code](https://github.co
 
 ### Characteristics
 
-* Single hpp file (include/patchwork/patchwork.hpp)
+* Single hpp file (`include/patchwork/patchwork.hpp`)
 
 * Robust ground consistency
 
@@ -40,7 +40,6 @@ Please kindly note that the concept of *traversable area* and the *ground* is qu
 0. [Test Env.](#Test-Env.)
 0. [Requirements](#requirements)
 0. [How to Run Patchwork](#How-to-Run-Patchwork)
-0. [Benchmark](#benchmark)
 0. [Citation](#citation)
 
 ### Test Env.
@@ -52,8 +51,8 @@ The code is tested successfully at
 ## Requirements
 
 ### ROS Setting
-- Install [ROS](http://torch.ch/docs/getting-started.html) on a machine. 
-- Also, [jsk-visualization](https://github.com/jsk-ros-pkg/jsk_visualization) is required to visualize Ground Likelihood Estimation status.
+- 1. Install [ROS](http://torch.ch/docs/getting-started.html) on a machine. 
+- 2. Thereafter, [jsk-visualization](https://github.com/jsk-ros-pkg/jsk_visualization) is required to visualize Ground Likelihood Estimation status.
 
 ```bash
 sudo apt-get install ros-melodic-jsk-recognition
@@ -64,9 +63,42 @@ sudo apt-get install ros-melodic-jsk-rviz-plugins
 ## How to Run Patchwork
 
 We provide three examples
+
 * Offline KITTI dataset
 * Onine (ROS Callback) KITTI dataset
 * Own dataset using pcd files
+
+### Offline KITTI dataset
+
+1. Down SemanticKITTI Odometry dataset (We also need labels since we also open the evaluation code! :)
+
+2. Set the `data_path` in `launch/offline_kitti.launch` for your machine.
+
+The `data_path` consists of `velodyne` folder and `labels` folder as follows:
+
+```
+data_path (e.g. 00, 01, ..., or 10)
+_____velodyne
+     |___000000.bin
+     |___000001.bin
+     |___000002.bin
+     |...
+_____labels
+     |___000000.label
+     |___000001.label
+     |___000002.label
+     |...
+_____...
+   
+```
+
+3. Run launch file 
+```
+$ roslaunch patchwork offline_kitti.launch
+```
+### Onine (ROS Callback) KITTI dataset
+
+### Own dataset using pcd files
 
 ```
 $ roslaunch nonplanar_gpf gpf.launch
@@ -79,24 +111,7 @@ $ roslaunch nonplanar_gpf gpf.launch
 roslaunch patchwork ground_semgentation.launch target_alg:="patchwork" target_seq:="00"
 ```
 
-```
-Base Folder
-_____00
-     |___velodyne [raw data *.bin]
-     |___pcd [*.pcd] (can be generated from *.bin by run_kittibin2pcd.sh)
-     |___labels [raw semantic label *.label] (optional for semantic aided lidar odometry) 
-     |___label_pcd [*.pcd] (optional for semantic aided lidar odometry, can be generated from *.label and *.bin by run_semantic_kitti_labelbin2pcd.sh) 
-     |___00.txt [ground truth (gnssins) pose] (optional for evaluation)
-     |___calib.txt [extrinsic transformation matrix (from body to lidar coordinate system)] (optional for evaluation)
-     |___result [output of MULLS: generated map, pose and evaluation] (would be generated automatically after the transaction) 
-_____01
-     |___velodyne
-     |___pcd
-     |___labels
-     |...
-_____...
-   
-```
+
 
 #### Point label 관련
 * point의 member 변수들은 `utils/common.hpp`에 나와있음: `x, y, z, intensity, label, id`로 구분됨. 여기서 id는 각 object의 아이디임 (본 레포에서는 안 쓰일듯)

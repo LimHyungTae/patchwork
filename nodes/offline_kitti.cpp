@@ -5,6 +5,7 @@
 #include <iostream>
 // For disable PCL complile lib, to use PointXYZIR
 #define PCL_NO_PRECOMPILE
+
 #include <ros/ros.h>
 #include <sensor_msgs/PointCloud2.h>
 #include <patchwork/node.h>
@@ -13,6 +14,7 @@
 #include "patchwork/patchwork.hpp"
 #include <visualization_msgs/Marker.h>
 #include "tools/kitti_loader.hpp"
+#include <signal.h>
 
 
 using PointType = PointXYZILID;
@@ -28,11 +30,18 @@ ros::Publisher RecallPublisher;
 boost::shared_ptr<PatchWork<PointType> > PatchworkGroundSeg;
 
 std::string output_filename;
-std::string acc_filename, pcd_savepath;
+std::string acc_filename;
+std::string pcd_savepath;
+std::string data_path;
 string      algorithm;
-string      mode;
 string      seq;
 bool        save_flag;
+
+void signal_callback_handler(int signum) {
+    cout << "Caught Ctrl + c " << endl;
+    // Terminate program
+    exit(signum);
+}
 
 void pub_score(std::string mode, double measure) {
     static int                 SCALE = 5;
@@ -67,16 +76,14 @@ void pub_score(std::string mode, double measure) {
 }
 
 template<typename T>
-pcl::PointCloud<T> cloudmsg2cloud(sensor_msgs::PointCloud2 cloudmsg)
-{
+pcl::PointCloud<T> cloudmsg2cloud(sensor_msgs::PointCloud2 cloudmsg) {
     pcl::PointCloud<T> cloudresult;
-    pcl::fromROSMsg(cloudmsg,cloudresult);
+    pcl::fromROSMsg(cloudmsg, cloudresult);
     return cloudresult;
 }
 
 template<typename T>
-sensor_msgs::PointCloud2 cloud2msg(pcl::PointCloud<T> cloud, std::string frame_id = "map")
-{
+sensor_msgs::PointCloud2 cloud2msg(pcl::PointCloud<T> cloud, std::string frame_id = "map") {
     sensor_msgs::PointCloud2 cloud_ROS;
     pcl::toROSMsg(cloud, cloud_ROS);
     cloud_ROS.header.frame_id = frame_id;
@@ -84,27 +91,28 @@ sensor_msgs::PointCloud2 cloud2msg(pcl::PointCloud<T> cloud, std::string frame_i
 }
 
 
+int main(int argc, char**argv) {
+    ros::init(argc, argv, "Offline KITTI");
 
-int main(int argc, char **argv) {
-    ros::init(argc, argv, "Benchmark");
     ros::NodeHandle nh;
     nh.param<string>("/algorithm", algorithm, "patchwork");
     nh.param<string>("/seq", seq, "00");
+    nh.param<string>("/data_path", data_path, "/");
 
-    PatchworkGroundSeg.reset(new PatchWork<PointXYZILID>(&nh));
-
-    CloudPublisher  = nh.advertise<sensor_msgs::PointCloud2>("/benchmark/cloud", 100);
-    TPPublisher     = nh.advertise<sensor_msgs::PointCloud2>("/benchmark/TP", 100);
-    FPPublisher     = nh.advertise<sensor_msgs::PointCloud2>("/benchmark/FP", 100);
-    FNPublisher     = nh.advertise<sensor_msgs::PointCloud2>("/benchmark/FN", 100);
-
+    CloudPublisher     = nh.advertise<sensor_msgs::PointCloud2>("/benchmark/cloud", 100);
+    TPPublisher        = nh.advertise<sensor_msgs::PointCloud2>("/benchmark/TP", 100);
+    FPPublisher        = nh.advertise<sensor_msgs::PointCloud2>("/benchmark/FP", 100);
+    FNPublisher        = nh.advertise<sensor_msgs::PointCloud2>("/benchmark/FN", 100);
     PrecisionPublisher = nh.advertise<visualization_msgs::Marker>("/precision", 1);
     RecallPublisher    = nh.advertise<visualization_msgs::Marker>("/recall", 1);
 
-    KittiLoader loader("/home/shapelim/dataset/dataset/sequences/00");
+    signal(SIGINT, signal_callback_handler);
 
-    int N = loader.size();
-    for (int n = 0; n < N; ++n){
+    PatchworkGroundSeg.reset(new PatchWork<PointXYZILID>(&nh));
+    KittiLoader loader(data_path);
+
+    int      N = loader.size();
+    for (int n = 0; n < N; ++n) {
         cout << n << "th node come" << endl;
         pcl::PointCloud<PointType> pc_curr;
         loader.get_cloud(n, pc_curr);
@@ -120,16 +128,21 @@ int main(int argc, char **argv) {
         calculate_precision_recall(pc_curr, pc_ground, precision, recall);
         calculate_precision_recall(pc_curr, pc_ground, precision_naive, recall_naive, false);
 
-        cout << "\033[1;32m" << n << "th, " << " takes : " << time_taken << " | " << pc_curr.size() << " -> " << pc_ground.size()
+        cout << "\033[1;32m" << n << "th, " << " takes : " << time_taken << " | " << pc_curr.size() << " -> "
+             << pc_ground.size()
              << "\033[0m" << endl;
 
         cout << "\033[1;32m P: " << precision << " | R: " << recall << "\033[0m" << endl;
 
-        ofstream sc_output(output_filename, ios::app);
-        sc_output << n << "," << time_taken << "," << precision << "," << recall << "," << precision_naive << "," << recall_naive;
 
-        sc_output << std::endl;
-        sc_output.close();
+// -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+//        If you want to save precision/recall in a text file, revise this part
+// -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+//        ofstream sc_output(output_filename, ios::app);
+//        sc_output << n << "," << time_taken << "," << precision << "," << recall << "," << precision_naive << "," << recall_naive;
+//        sc_output << std::endl;
+//        sc_output.close();
+// -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 
         // Publish msg
         pcl::PointCloud<PointType> TP;
@@ -139,18 +152,21 @@ int main(int argc, char **argv) {
         discern_ground(pc_ground, TP, FP);
         discern_ground(pc_non_ground, FN, TN);
 
-        if (save_flag) {
-            std::map<int, int> pc_curr_gt_counts, g_est_gt_counts;
-            double             accuracy;
-            save_all_accuracy(pc_curr, pc_ground, acc_filename, accuracy, pc_curr_gt_counts, g_est_gt_counts);
+// -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+//        If you want to save the output of pcd, revise this part
+// -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+//        if (save_flag) {
+//            std::map<int, int> pc_curr_gt_counts, g_est_gt_counts;
+//            double             accuracy;
+//            save_all_accuracy(pc_curr, pc_ground, acc_filename, accuracy, pc_curr_gt_counts, g_est_gt_counts);
+//
+//            std::string count_str        = std::to_string(n);
+//            std::string count_str_padded = std::string(NUM_ZEROS - count_str.length(), '0') + count_str;
+//            std::string pcd_filename     = pcd_savepath + "/" + count_str_padded + ".pcd";
+//            pc2pcdfile(TP, FP, FN, TN, pcd_filename);
+//        }
+// -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 
-            std::string count_str        = std::to_string(n);
-            std::string count_str_padded = std::string(NUM_ZEROS - count_str.length(), '0') + count_str;
-            std::string pcd_filename     = pcd_savepath + "/" + count_str_padded + ".pcd";
-
-        //    pc2pcdfile(TP, FP, FN, TN, pcd_filename);
-        }
-        // Write data
         CloudPublisher.publish(cloud2msg(pc_curr));
         TPPublisher.publish(cloud2msg(TP));
         FPPublisher.publish(cloud2msg(FP));
