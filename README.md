@@ -60,6 +60,14 @@ sudo apt-get install ros-melodic-jsk-common-msgs
 sudo apt-get install ros-melodic-jsk-rviz-plugins
 ```
 
+- 3. Compile compile this package. We use [catkin tools](https://catkin-tools.readthedocs.io/en/latest/),
+```bash
+mkdir -p ~/catkin_ws/src
+cd ~/catkin_ws/src
+git clone https://github.com/LimHyungTae/patchwork.git
+cd .. && catkin build patchwork 
+```
+
 ## How to Run Patchwork
 
 We provide three examples
@@ -70,7 +78,7 @@ We provide three examples
 
 ### Offline KITTI dataset
 
-1. Down SemanticKITTI Odometry dataset (We also need labels since we also open the evaluation code! :)
+1. Download [SemanticKITTI](http://www.semantic-kitti.org/dataset.html#download) Odometry dataset (We also need labels since we also open the evaluation code! :)
 
 2. Set the `data_path` in `launch/offline_kitti.launch` for your machine.
 
@@ -94,37 +102,38 @@ _____...
 
 3. Run launch file 
 ```
-$ roslaunch patchwork offline_kitti.launch
+roslaunch patchwork offline_kitti.launch
 ```
+
+You can directly feel the speed of Patchwork! :wink:
+
 ### Onine (ROS Callback) KITTI dataset
+
+We also provide rosbag example. If you run our patchwork via rosbag, please refer this example.
+
+1. Download readymade rosbag 
+
+```
+wget https://urserver.kaist.ac.kr/publicdata/patchwork/kitti_00_xyzilid.bag
+```
+
+2. After build this package, run the roslaunch as follows:
+
+```
+roslaunch patchwork rosbag_kitti.launch
+```
+
+3. Then play the rosbag file in other command
+
+```
+rosbag play kitti_00_xyzilid.bag
+```
 
 ### Own dataset using pcd files
 
-```
-$ roslaunch nonplanar_gpf gpf.launch
-```
-
-현재 baseline인 gpf만 포팅해둔 상태임.
-
-## How to run
-```
-roslaunch patchwork ground_semgentation.launch target_alg:="patchwork" target_seq:="00"
-```
+To be updated (In fact, we already set the data loader in `include/tools/pcd_loader.hpp`) 
 
 
-
-#### Point label 관련
-* point의 member 변수들은 `utils/common.hpp`에 나와있음: `x, y, z, intensity, label, id`로 구분됨. 여기서 id는 각 object의 아이디임 (본 레포에서는 안 쓰일듯)
-* label은 int로 돼있는데, 각 int가 나타내는 건 [SemanticKITTI API](https://github.com/PRBonn/semantic-kitti-api/blob/master/config/semantic-kitti.yaml)에 나와있음
-* 아마 learning_map에서 보듯이, (40, 48, 49, 60)는 바닥인거 같은데, 44와 72도 확인 요망
-
-#### 알고리즘 개발 관련
-
-* **msg의 node.msg는 절대 변경하지 마셈!** 변경하면 bag 파일의 node를 callback 못 받음...bag 파일을 재생성해야 callback을 받을 수 있음
-* 새로운 알고리즘을 만들 때는 `launch/gpf.launch`의 `algorithm`을 해당 이름에 맞게 바꾸고, `nodes/main.cpp`에 연동시켜 결과를 뽑으면 됨
-* 해당 알고리즘에 대한 rviz 파일을 따로 생성하길 권장
-* c++에서는 결과를 저장하는 txt나 csv파일 형식으로 저장하고 분석을 파이썬을 이용해서 `scripts/analysis` 내에 만들길 권장
-* 현재 `scripts/analysis/output` 내를 보면 kitti 내에서 z의 변화에 대해서 visualization해둠!
 
 ## Citation
 
