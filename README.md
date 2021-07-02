@@ -31,11 +31,11 @@ It's an overall updated version of **R-GPF of ERASOR** [[Code](https://github.co
 
 * Robust ground consistency
 
-As shown in the demo videos and below figure, our method shows most promising robust performance compared with other state-of-the-art methods, especially, our method focuses on the little perturbation of precision/recall.
+As shown in the demo videos and below figure, our method shows the most promising robust performance compared with other state-of-the-art methods, especially, our method focuses on the little perturbation of precision/recall.
 
 ![](img/precision_recall.png)
 
-Please kindly note that the concept of *traversable area* and the *ground* is quite different! Please refer to our paper.
+Please kindly note that the concept of *traversable area* and *ground* is quite different! Please refer to our paper.
 
 
 ## Contents
@@ -75,7 +75,7 @@ cd .. && catkin build patchwork
 We provide three examples
 
 * Offline KITTI dataset
-* Onine (ROS Callback) KITTI dataset
+* Online (ROS Callback) KITTI dataset
 * Own dataset using pcd files
 
 ### Offline KITTI dataset
@@ -109,9 +109,9 @@ roslaunch patchwork offline_kitti.launch
 
 You can directly feel the speed of Patchwork! :wink:
 
-### Onine (ROS Callback) KITTI dataset
+### Online (ROS Callback) KITTI dataset
 
-We also provide rosbag example. If you run our patchwork via rosbag, please refer this example.
+We also provide rosbag example. If you run our patchwork via rosbag, please refer to this example.
 
 1. Download readymade rosbag 
 
@@ -119,13 +119,13 @@ We also provide rosbag example. If you run our patchwork via rosbag, please refe
 wget https://urserver.kaist.ac.kr/publicdata/patchwork/kitti_00_xyzilid.bag
 ```
 
-2. After build this package, run the roslaunch as follows:
+2. After building this package, run the roslaunch as follows:
 
 ```
 roslaunch patchwork rosbag_kitti.launch
 ```
 
-3. Then play the rosbag file in other command
+3. Then play the rosbag file in another command
 
 ```
 rosbag play kitti_00_xyzilid.bag
@@ -152,7 +152,7 @@ If you use our code or method in your work, please consider citing the following
 
 ### Description
 
-All explanations of paramters and other experimental results will be uploaded in [wiki](https://github.com/LimHyungTae/patchwork/wiki)
+All explanations of parameters and other experimental results will be uploaded in [wiki](https://github.com/LimHyungTae/patchwork/wiki)
 
 ### Contact
 
