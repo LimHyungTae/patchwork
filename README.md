@@ -35,6 +35,9 @@ As shown in the demo videos and below figure, our method shows the most promisin
 
 ![](img/precision_recall.png)
 
+
+![](img2/seq_00_pr_zoom.pdf)
+
 Please kindly note that the concept of *traversable area* and *ground* is quite different! Please refer to our paper.
 
 
