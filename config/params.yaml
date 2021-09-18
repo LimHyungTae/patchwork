@@ -23,6 +23,9 @@ patchwork:
         num_zones: 4
         num_sectors_each_zone: [16, 32 ,54, 32]
         mum_rings_each_zone: [2, 4, 4, 4]
+        # The elevation_thresholds are with respect to the sensor frame
+        # Thus, actually (sensor_height - threshold_value) is the maximum ground height.
+        # For instance, for the first ring, 1.723 - 1.2 = 0.523 is acceptable, maximum ground height
         elevation_thresholds:  [-1.2, -0.9984, -0.851, -0.605] # For elevation. The size should be equal to flatness_thresholds vector
         flatness_thresholds:  [0.0, 0.000125, 0.000185, 0.000185]  # For flatness. The size should be equal to elevation_thresholds vector
 
