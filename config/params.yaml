@@ -16,17 +16,31 @@ patchwork:
     uprightness_thr: 0.707 # 45: 0.707 / 60: 0.866
 
     adaptive_seed_selection_margin: -1.1 # The points below the adaptive_seed_selection_margin * sensor_height are filtered
+    
+    # It is not in the paper
+    # It is also not matched our philosophy, but it is employed to reject some FPs easily & intuitively.
+    # For patchwork, the global elevation threshold is only applied on Z3 and Z4
+    using_global_elevation: false
+    # W.r.t sensor frame (That is, if it is 0.0, then the candidates whose z is higher than z height of 3D LiDAR sensor are rejected
+    global_elevation_threshold: -0.5
+    
     uniform: # deprecated
         num_rings: 16
         num_sectors: 54
     czm:
+        # Note that `num_zones` == size of `num_sectors_each_zone` == size of `num_rings_each_zone` == size of `min_ranges` - 1
+        # To divide zones, max_r, min_r, and min_ranges are utilized
         num_zones: 4
         num_sectors_each_zone: [16, 32 ,54, 32]
-        mum_rings_each_zone: [2, 4, 4, 4]
+        num_rings_each_zone: [2, 4, 4, 4]
+        # Note that `min_r` == `min_ranges_each_zone`[0]!
+        min_ranges_each_zone: [2.7, 12.3625, 22.025, 41.35]
         # The elevation_thresholds are with respect to the sensor frame
         # Thus, actually (sensor_height - threshold_value) is the maximum ground height.
         # For instance, for the first ring, 1.723 - 1.2 = 0.523 is acceptable, maximum ground height
+        # Note that the size of below parameters are indepentent to `num_zones`!
         elevation_thresholds:  [-1.2, -0.9984, -0.851, -0.605] # For elevation. The size should be equal to flatness_thresholds vector
         flatness_thresholds:  [0.0, 0.000125, 0.000185, 0.000185]  # For flatness. The size should be equal to elevation_thresholds vector
+         
 
 
