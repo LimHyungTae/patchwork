@@ -34,7 +34,7 @@ class PatchWork {
 
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-    
+
     typedef std::vector<pcl::PointCloud<PointT> > Ring;
     typedef std::vector<Ring> Zone;
 
