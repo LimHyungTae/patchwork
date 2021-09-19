@@ -131,8 +131,21 @@ rosbag play kitti_00_xyzilid.bag
 
 ### Own dataset using pcd files
 
-To be updated (In fact, we already set the data loader in `include/tools/pcd_loader.hpp`) 
+#### Offline (Using *.pcd or *.bin file)
 
+1. Revise `include/tools/pcd_loader.hpp' as suits the circumstance.
+
+2. Then change `KittiLoader` to your own loader.
+
+#### Online (via rosbag)
+
+1. Utilize rosbag_kitti.launch
+
+2. That is, remap the topic of subscriber, e.g. add remap line as follows:
+
+```
+<remap from="/node" to="$YOUR_LIDAR_TOPIC_NAME$"/>
+```
 
 
 ## Citation

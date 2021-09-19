@@ -101,11 +101,12 @@ void callbackNode(const patchwork::node::ConstPtr &msg) {
 
     cout << "\033[1;32m P: " << precision << " | R: " << recall << "\033[0m" << endl;
 
-    ofstream sc_output(output_filename, ios::app);
-    sc_output << msg->header.seq << "," << time_taken << "," << precision << "," << recall << "," << precision_naive << "," << recall_naive;
-
-    sc_output << std::endl;
-    sc_output.close();
+//    output_filename = "/home/shapelim/patchwork_debug.txt";
+//    ofstream sc_output(output_filename, ios::app);
+//    sc_output << msg->header.seq << "," << time_taken << "," << precision << "," << recall << "," << precision_naive << "," << recall_naive;
+//
+//    sc_output << std::endl;
+//    sc_output.close();
 
     // Publish msg
     pcl::PointCloud<PointType> TP;
