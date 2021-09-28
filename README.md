@@ -135,13 +135,13 @@ rosbag play kitti_00_xyzilid.bag
 
 1. Revise `include/tools/pcd_loader.hpp' as suits the circumstance.
 
-2. Then change `KittiLoader` to your own loader.
+2. Then change the loader in `nodes/offline_own_data.cpp.`
 
 #### Online (via rosbag)
 
-1. Utilize rosbag_kitti.launch
+1. Revise rosbag_kitti.launch, that is, renaming of msg is needeed.
 
-2. That is, remap the topic of subscriber, e.g. add remap line as follows:
+2. To do so, remap the topic of subscriber, e.g. add remap line as follows:
 
 ```
 <remap from="/node" to="$YOUR_LIDAR_TOPIC_NAME$"/>
