@@ -195,8 +195,8 @@ If you have any questions, please let me know:
 - [x] Add ROS support
 - [x] Add preprint paper
 - [x] Add demo videos
-- [ ] Add demo examples
-- [ ] Update wiki
+- [x] Add own dataset examples
+- [x] Update wiki
 
 -----
 
