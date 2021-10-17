@@ -137,9 +137,9 @@ Please refer to `/nodes/offilne_own_data.cpp`.
 
 Be sure to set right params. Otherwise, your results may be wrong as follows:
 
-W/ wrong params      | After setting right params
+W/ wrong params            | After setting right params
 :-------------------------:|:-------------------------:
-![](img/ouster128_wrong_elevation.jpg) |  ![](img/ouster128_right_elevation.jpg)
+![](img/ouster128_wrong_elevation.png) |  ![](img/ouster128_right_elevation.png)
 
 For better understanding of the parameters of Patchwork, please read [our wiki](https://github.com/LimHyungTae/patchwork/wiki).
 
