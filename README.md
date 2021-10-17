@@ -139,9 +139,9 @@ Be sure to set right params. Otherwise, your results may be wrong as follows:
 
 W/ wrong params      | After setting right params
 :-------------------------:|:-------------------------:
-![](img/patchwork_ouster128_0.5_0.6_0.7_0.8.jpg) |  ![](img/patchwork_ouster128_0.5_0.8_1.0_1.1.jpg)
+![](img/ouster128_wrong_elevation.jpg) |  ![](img/ouster128_right_elevation.jpg)
 
-For better understanding of the parameters of Patchwork, please read [our wiki](https://github.com/LimHyungTae/patchwork/wiki)].
+For better understanding of the parameters of Patchwork, please read [our wiki](https://github.com/LimHyungTae/patchwork/wiki).
 
 
 #### Offline (Using *.pcd or *.bin file)
