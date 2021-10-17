@@ -22,7 +22,7 @@ patchwork:
     uprightness_thr: 0.707 # For uprightness. 45: 0.707 / 60: 0.866. The larger, the more conservative
 
     # The points below the adaptive_seed_selection_margin * sensor_height are filtered
-    # Tor rejecti points caused by reflection or multipath problems.
+    # For reject points caused by reflection or multipath problems.
     # it should be lower than -1.0
     adaptive_seed_selection_margin: -1.1
     
