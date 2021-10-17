@@ -131,15 +131,32 @@ rosbag play kitti_00_xyzilid.bag
 
 ### Own dataset using pcd files
 
+Please refer to `/nodes/offilne_own_data.cpp`. 
+
+(Note that in your own data format, there may not exist ground truth labels!)
+
+Be sure to set right params. Otherwise, your results may be wrong as follows:
+
+W/ wrong params            | After setting right params
+:-------------------------:|:-------------------------:
+![](img/ouster128_wrong_elevation.png) |  ![](img/ouster128_right_elevation.png)
+
+For better understanding of the parameters of Patchwork, please read [our wiki](https://github.com/LimHyungTae/patchwork/wiki).
+
+
 #### Offline (Using *.pcd or *.bin file)
 
-1. Revise `include/tools/pcd_loader.hpp' as suits the circumstance.
+1. Utilize `/nodes/offilne_own_data.cpp`
 
-2. Then change the loader in `nodes/offline_own_data.cpp.`
+2. Please check the output by following command and corresponding files:
+
+```
+roslaunch patchwork offline_ouster128.launch
+```
 
 #### Online (via rosbag)
 
-1. Revise rosbag_kitti.launch, that is, renaming of msg is needeed.
+1. Utilize `rosbag_kitti.launch`.
 
 2. To do so, remap the topic of subscriber, e.g. add remap line as follows:
 
@@ -147,6 +164,7 @@ rosbag play kitti_00_xyzilid.bag
 <remap from="/node" to="$YOUR_LIDAR_TOPIC_NAME$"/>
 ```
 
+3. In addition, minor modification of `ros_kitti.cpp` is necessary by refering to `offline_own_data.cpp`.
 
 ## Citation
 

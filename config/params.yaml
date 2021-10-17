@@ -1,6 +1,12 @@
 sensor_height: 1.723
 save_flag: true
 
+# Extrinsics (Raw lidar coordinate -> Coordinate that is parallel to the X-Y plane of ground)
+# But, not in use
+extrinsic_trans: [0.0, 0.0, 0.0]
+extrinsic_rot: [1, 0, 0,
+               0, 1, 0,
+               0, 0, 1]
 patchwork:
     mode: "czm" 
     verbose: true # To check effect of uprightness/elevation/flatness
@@ -13,9 +19,12 @@ patchwork:
     th_dist: 0.125
     max_r: 80.0
     min_r: 2.7 # to consider vicinity of mobile plot form.
-    uprightness_thr: 0.707 # 45: 0.707 / 60: 0.866
+    uprightness_thr: 0.707 # For uprightness. 45: 0.707 / 60: 0.866. The larger, the more conservative
 
-    adaptive_seed_selection_margin: -1.1 # The points below the adaptive_seed_selection_margin * sensor_height are filtered
+    # The points below the adaptive_seed_selection_margin * sensor_height are filtered
+    # Tor rejecti points caused by reflection or multipath problems.
+    # it should be lower than -1.0
+    adaptive_seed_selection_margin: -1.1
     
     # It is not in the paper
     # It is also not matched our philosophy, but it is employed to reject some FPs easily & intuitively.

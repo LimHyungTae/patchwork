@@ -1,0 +1,11 @@
+<launch>
+
+<rosparam command="load" file="$(find patchwork)/config/params_ouster128.yaml" />
+
+<node name="$(anon offline_own_data)" pkg="patchwork" type="offline_own_data" output="screen">
+<rosparam param="/algorithm">"patchwork"</rosparam> 
+</node>
+<node name="rviz" pkg="rviz" type="rviz" args="-d $(find patchwork)/rviz/patchwork_own_data.rviz"/>
+
+
+</launch>
