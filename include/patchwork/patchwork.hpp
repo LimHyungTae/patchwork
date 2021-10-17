@@ -1,11 +1,15 @@
 #ifndef PATCHWORK_H
 #define PATCHWORK_H
 
+#include <iostream>
 #include <sensor_msgs/PointCloud2.h>
 #include <ros/ros.h>
 #include <jsk_recognition_msgs/PolygonArray.h>
 #include <Eigen/Dense>
 #include <boost/format.hpp>
+#include <pcl_conversions/pcl_conversions.h>
+#include <pcl/common/centroid.h>
+#include <pcl/io/pcd_io.h>
 
 #define MARKER_Z_VALUE -2.2
 #define UPRIGHT_ENOUGH 0.55 // cyan
@@ -81,7 +85,6 @@ public:
         ROS_INFO("Min. range:: %f", min_range_);
         ROS_INFO("Num. rings: %d", num_rings_);
         ROS_INFO("Num. sectors: %d", num_sectors_);
-        ROS_INFO("Normal vector threshold: %f", uprightness_thr_);
         ROS_INFO("adaptive_seed_selection_margin: %f", adaptive_seed_selection_margin_);
 
         // CZM denotes 'Concentric Zone Model'. Please refer to our paper
@@ -92,6 +95,10 @@ public:
         node_handle_.getParam("/patchwork/czm/elevation_thresholds", elevation_thr_);
         node_handle_.getParam("/patchwork/czm/flatness_thresholds", flatness_thr_);
 
+
+        ROS_INFO("\033[1;32mUprightness\33[0m threshold: %f", uprightness_thr_);
+        ROS_INFO("\033[1;32mElevation\33[0m thresholds: %f %f %f %f", elevation_thr_[0],elevation_thr_[1], elevation_thr_[2], elevation_thr_[3]);
+        ROS_INFO("\033[1;32mFlatness\033[0m thresholds: %f %f %f %f", flatness_thr_[0], flatness_thr_[1], flatness_thr_[2], flatness_thr_[3]);
 
         ROS_INFO("Num. zones: %d", num_zones_);
 
@@ -306,9 +313,11 @@ void PatchWork<PointT>::extract_initial_seeds_(
     int    cnt = 0;
 
     int init_idx = 0;
+    // Empirically, adaptive seed selection applying to Z1 is fine
+    static double lowest_h_margin_in_close_zone = (sensor_height_ == 0.0)? -0.1 : adaptive_seed_selection_margin_ * sensor_height_;
     if (zone_idx == 0) {
         for (int i = 0; i < p_sorted.points.size(); i++) {
-            if (p_sorted.points[i].z < adaptive_seed_selection_margin_ * sensor_height_) {
+            if (p_sorted.points[i].z < lowest_h_margin_in_close_zone) {
                 ++init_idx;
             } else {
                 break;

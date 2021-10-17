@@ -1,11 +1,6 @@
-#include <iostream>
 // For disable PCL complile lib, to use PointXYZIR
 #define PCL_NO_PRECOMPILE
-#include <ros/ros.h>
-#include <sensor_msgs/PointCloud2.h>
 #include <patchwork/node.h>
-#include <pcl_conversions/pcl_conversions.h>
-#include <pcl/common/centroid.h>
 #include "patchwork/patchwork.hpp"
 #include <visualization_msgs/Marker.h>
 

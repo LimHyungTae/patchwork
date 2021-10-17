@@ -2,15 +2,9 @@
 // Created by Hyungtae Lim on 6/23/21.
 //
 
-#include <iostream>
-// For disable PCL complile lib, to use PointXYZIR
+// For disable PCL complile lib, to use PointXYZILID
 #define PCL_NO_PRECOMPILE
-
-#include <ros/ros.h>
-#include <sensor_msgs/PointCloud2.h>
 #include <patchwork/node.h>
-#include <pcl_conversions/pcl_conversions.h>
-#include <pcl/common/centroid.h>
 #include "patchwork/patchwork.hpp"
 #include <visualization_msgs/Marker.h>
 #include "tools/kitti_loader.hpp"
@@ -108,7 +102,7 @@ int main(int argc, char**argv) {
 
     signal(SIGINT, signal_callback_handler);
 
-    PatchworkGroundSeg.reset(new PatchWork<PointXYZILID>(&nh));
+    PatchworkGroundSeg.reset(new PatchWork<PointType>(&nh));
     KittiLoader loader(data_path);
 
     int      N = loader.size();
@@ -138,10 +132,11 @@ int main(int argc, char**argv) {
 // -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 //        If you want to save precision/recall in a text file, revise this part
 // -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
-//        ofstream sc_output(output_filename, ios::app);
-//        sc_output << n << "," << time_taken << "," << precision << "," << recall << "," << precision_naive << "," << recall_naive;
-//        sc_output << std::endl;
-//        sc_output.close();
+//        string output_filename = "/home/shapelim/data.csv";
+//        ofstream ground_output(output_filename, ios::app);
+//        ground_output << n << "," << time_taken << "," << precision << "," << recall << "," << precision_naive << "," << recall_naive;
+//        ground_output << std::endl;
+//        ground_output.close();
 // -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 
         // Publish msg
