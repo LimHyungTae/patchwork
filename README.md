@@ -141,7 +141,7 @@ W/ wrong params            | After setting right params
 :-------------------------:|:-------------------------:
 ![](img/ouster128_wrong_elevation.png) |  ![](img/ouster128_right_elevation.png)
 
-For better understanding of the parameters of Patchwork, please read [our wiki](https://github.com/LimHyungTae/patchwork/wiki).
+For better understanding of the parameters of Patchwork, please read [our wiki, 4. IMPORTANT: Setting Parameters of Patchwork in Your Own Env.](https://github.com/LimHyungTae/patchwork/wiki/4.-IMPORTANT:-Setting-Parameters-of-Patchwork-in-Your-Own-Env.).
 
 
 #### Offline (Using *.pcd or *.bin file)
