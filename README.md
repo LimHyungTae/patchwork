@@ -8,7 +8,7 @@ Patchwork                  |  Concept of our method (CZM & GLE)
 :-------------------------:|:-------------------------:
 ![](img/patchwork_concept_resized.jpg) |  ![](img/patchwork.gif)
 
-It's an overall updated version of **R-GPF of ERASOR** [[Code](https://github.com/LimHyungTae/ERASOR)] [[Paper](https://arxiv.org/abs/2103.04316)]. 
+It's an overall updated version of **R-GPF of ERASOR** [**[Code](https://github.com/LimHyungTae/ERASOR)**] [**[Paper](https://arxiv.org/abs/2103.04316)**]. 
 
 ----
 
