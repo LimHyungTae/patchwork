@@ -11,6 +11,8 @@ Patchwork                  |  Concept of our method (CZM & GLE)
 It's an overall updated version of **R-GPF of ERASOR** [**[Code](https://github.com/LimHyungTae/ERASOR)**] [**[Paper](https://arxiv.org/abs/2103.04316)**]. 
 
 # NEWS (21.12.27)
+- "pub\_for\_legoloam" node for the pointcloud in kitti bagfile is addded.
+- bug in xy2theta function is fixed.
 
 ----
 

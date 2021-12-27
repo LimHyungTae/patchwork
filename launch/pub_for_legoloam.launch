@@ -1,0 +1,11 @@
+<launch>
+
+<node name="$(anon pub_for_legoloam)" pkg="patchwork" type="pub_for_legoloam" output="screen">
+<rosparam param="/algorithm">"patchwork"</rosparam> 
+<rosparam param="/seq">"00"</rosparam>
+<remap from="/node" to="/velodyne_points"/>
+</node>
+<node name="rviz" pkg="rviz" type="rviz" args="-d $(find patchwork)/rviz/pub_for_legoloam_viz.rviz"/>
+
+<rosparam command="load" file="$(find patchwork)/config/params.yaml" />
+</launch>

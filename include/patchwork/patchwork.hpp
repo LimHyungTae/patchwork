@@ -518,11 +518,15 @@ double PatchWork<PointT>::calc_principal_variance(const Eigen::Matrix3f &cov, co
 template<typename PointT>
 inline
 double PatchWork<PointT>::xy2theta(const double &x, const double &y) { // 0 ~ 2 * PI
-    if (y >= 0) {
-        return atan2(y, x); // 1, 2 quadrant
-    } else {
-        return 2 * M_PI + atan2(y, x);// 3, 4 quadrant
-    }
+    /*
+      if (y >= 0) {
+          return atan2(y, x); // 1, 2 quadrant
+      } else {
+          return 2 * M_PI + atan2(y, x);// 3, 4 quadrant
+      }
+    */
+    auto atan_value = atan2(y,x); // EDITED!
+    return atan_value > 0 ? atan_value : atan_value + 2*M_PI; // EDITED!
 }
 
 template<typename PointT>
