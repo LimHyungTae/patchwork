@@ -1,6 +1,7 @@
 // For disable PCL complile lib, to use PointXYZIR
 #define PCL_NO_PRECOMPILE
 #include <patchwork/node.h>
+#include <patchwork/comb.h>
 #include "patchwork/patchwork.hpp"
 #include <visualization_msgs/Marker.h>
 
@@ -55,10 +56,21 @@ void callbackNode(const sensor_msgs::PointCloud2::ConstPtr& msg) {
     cout << "Operating patchwork..." << endl;
     PatchworkGroundSeg->estimate_ground(pc_curr, pc_ground, pc_non_ground, time_taken);
 
+
+    auto msg_curr = cloud2msg(pc_curr);
+    auto msg_ground = cloud2msg(pc_ground);
+
+    patchwork::comb cloud_comb;
+    cloud_comb.header = msg->header;
+    cloud_comb.curr = msg_curr;
+    cloud_comb.ground = msg_ground;
+    CombPublisher.publish(cloud_comb);
+
+    /*
     CloudPublisher.publish(cloud2msg(pc_curr));
     PositivePublisher.publish(cloud2msg(pc_ground));
     NegativePublisher.publish(cloud2msg(pc_non_ground));
-
+    */
 }
 
 int main(int argc, char **argv) {
@@ -73,6 +85,9 @@ int main(int argc, char **argv) {
     CloudPublisher  = nh.advertise<sensor_msgs::PointCloud2>("/benchmark/cloud", 100);
     PositivePublisher     = nh.advertise<sensor_msgs::PointCloud2>("/benchmark/P", 100);
     NegativePublisher     = nh.advertise<sensor_msgs::PointCloud2>("/benchmark/N", 100);
+
+    /* Publisher for combined msg of source cloud, ground cloud */
+    CombPublisher = nh.advertise<patchwork::comb>("/benchmark/comb", 100);
 
     ros::Subscriber NodeSubscriber = nh.subscribe<sensor_msgs::PointCloud2>("/node", 5000, callbackNode);
 

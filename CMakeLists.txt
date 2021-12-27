@@ -25,6 +25,7 @@ find_package(catkin REQUIRED COMPONENTS
 add_message_files(
         FILES
         node.msg
+        comb.msg
 )
 
 generate_messages(
