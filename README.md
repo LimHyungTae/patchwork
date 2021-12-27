@@ -13,6 +13,12 @@ It's an overall updated version of **R-GPF of ERASOR** [**[Code](https://github.
 # NEWS (21.12.27)
 - "pub\_for\_legoloam" node for the pointcloud in kitti bagfile is addded.
 - bug in xy2theta function is fixed.
+- msg is created for binding source cloud and ground cloud
+- How to run
+```bash
+roslaunch patchwork pub_for_legoloam.launch
+rosbag play {YOUR_FILE_PATH}/KITTI_BAG/kitti_sequence_00.bag --clock /kitti/velo/pointcloud:=/velodyne_points
+```
 
 ----
 
