@@ -10,7 +10,7 @@
   <!-- One license tag required, multiple allowed, one license per tag -->
   <!-- Commonly used license strings: -->
   <!--   BSD, MIT, Boost Software License, GPLv2, GPLv3, LGPLv2.1, LGPLv3 -->
-  <license>TODO</license>
+  <license>MIT</license>
   <buildtool_depend>catkin</buildtool_depend>
   <exec_depend>message_generation</exec_depend>
   <exec_depend>libpcl-all</exec_depend>
