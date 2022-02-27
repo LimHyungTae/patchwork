@@ -20,7 +20,7 @@ It's an overall updated version of **R-GPF of ERASOR** [**[Code](https://github.
 roslaunch patchwork pub_for_legoloam.launch
 rosbag play {YOUR_FILE_PATH}/KITTI_BAG/kitti_sequence_00.bag --clock /kitti/velo/pointcloud:=/velodyne_points
 ```
-- This README will be updated soon!
+- **This README about this LiDAR odometry is still incomplete. It will be updated soon!**
 ----
 
 # Demo
