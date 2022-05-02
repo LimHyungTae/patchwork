@@ -70,7 +70,7 @@ patchwork:
         # E.g. for the first ring, -1.723 (sensor height in the KITTI) + 0.523 = -1.2 becomes the criteria of the elevation filter
         # That is, if the z-elevation of the bin is higher than -1.2, then the cloud points from the bin are rejected
         elevation_thresholds:  [0.523, 0.746, 0.879, 1.125] # For elevation. The size should be equal to flatness_thresholds vector
-        flatness_thresholds:  [0.0, 0.000125, 0.000185, 0.000185]  # For flatness. The size should be equal to elevation_thresholds vector
+        flatness_thresholds:  [0.0005, 0.000725, 0.001, 0.001]  # For flatness. The size should be equal to elevation_thresholds vector
          
 
 
