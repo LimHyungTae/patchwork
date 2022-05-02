@@ -10,7 +10,12 @@ Patchwork                  |  Concept of our method (CZM & GLE)
 
 It's an overall updated version of **R-GPF of ERASOR** [**[Code](https://github.com/LimHyungTae/ERASOR)**] [**[Paper](https://arxiv.org/abs/2103.04316)**]. 
 
-# NEWS (21.12.27)
+## NEWS (22.05.22)
+- The meaning of `elevation_thresholds` is changed to increase the usability.
+- A novel height estimator, called *All-Terrain Automatic heighT estimator (ATAT)* is added within the patchwork code, which auto-calibrates the sensor height using the ground points in the vicinity of the vehicle/mobile robot. 
+  - Please refer to the function `consensus_set_based_height_estimation()`.
+
+## NEWS (21.12.27)
 - `pub_for_legoloam` node for the pointcloud in kitti bagfile is added.
 	- `ground_estimate.msg` is added
 - Bug in xy2theta function is fixed.

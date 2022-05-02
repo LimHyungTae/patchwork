@@ -91,11 +91,11 @@ Visualization Manager:
     - Alpha: 0.6000000238418579
       Class: jsk_rviz_plugin/PolygonArray
       Color: 25; 255; 0
-      Enabled: true
+      Enabled: false
       Name: plane_viz
       Topic: /gpf/plane
       Unreliable: false
-      Value: true
+      Value: false
       coloring: Liekelihood
       enable lighting: false
       normal length: 1
@@ -116,9 +116,7 @@ Visualization Manager:
       Enabled: true
       Invert Rainbow: false
       Max Color: 255; 255; 255
-      Max Intensity: 0.8799999952316284
       Min Color: 0; 0; 0
-      Min Intensity: 0
       Name: TP
       Position Transformer: XYZ
       Queue Size: 10
@@ -146,9 +144,7 @@ Visualization Manager:
       Enabled: true
       Invert Rainbow: false
       Max Color: 25; 25; 255
-      Max Intensity: 0.6899999976158142
       Min Color: 0; 0; 0
-      Min Intensity: 0
       Name: FN
       Position Transformer: XYZ
       Queue Size: 10
@@ -176,9 +172,7 @@ Visualization Manager:
       Enabled: true
       Invert Rainbow: false
       Max Color: 255; 255; 255
-      Max Intensity: 0.9900000095367432
       Min Color: 0; 0; 0
-      Min Intensity: 0
       Name: FP
       Position Transformer: XYZ
       Queue Size: 10
@@ -229,9 +223,7 @@ Visualization Manager:
       Enabled: true
       Invert Rainbow: false
       Max Color: 255; 255; 255
-      Max Intensity: -999999
       Min Color: 0; 0; 0
-      Min Intensity: 999999
       Name: revert_pc
       Position Transformer: XYZ
       Queue Size: 10
@@ -259,9 +251,7 @@ Visualization Manager:
       Enabled: false
       Invert Rainbow: false
       Max Color: 255; 255; 255
-      Max Intensity: 0.8100000023841858
       Min Color: 0; 0; 0
-      Min Intensity: 0
       Name: reject_pc
       Position Transformer: XYZ
       Queue Size: 10
@@ -302,25 +292,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 139.39056396484375
+      Distance: 107.94405364990234
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: -1.5914632081985474
-        Y: -2.2983741760253906
-        Z: 0.7079330682754517
+        X: -1.8628654479980469
+        Y: -1.9925763607025146
+        Z: 0.7012021541595459
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 1.4297964572906494
+      Pitch: 1.5697963237762451
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 3.1616172790527344
+      Yaw: 3.141618013381958
     Saved: ~
 Window Geometry:
   Displays:
@@ -338,5 +328,5 @@ Window Geometry:
   Views:
     collapsed: true
   Width: 1389
-  X: 755
-  Y: 224
+  X: 531
+  Y: 194

@@ -1,3 +1,7 @@
+# 22.05.02 Update 
+#          `sensor_height` denotes the elevation of the origin of the point cloud "with respect to the ground"
+#          So, it mostly have a positive value
+#          Note that if `patchwork/ATAT/ATAT_ON` is set to be true, the sensor_height is auto-calibrated
 sensor_height: 0.0
 save_flag: true
 
@@ -33,6 +37,20 @@ patchwork:
     # W.r.t sensor frame (That is, if it is 0.0, then the candidates whose z is higher than z height of 3D LiDAR sensor are rejected
     global_elevation_threshold: -0.5
     
+    # 22.05.02 Update 
+    # ATAT is the abbrev. for All-Terrain Automatic heighT estimator
+    # It automatically corrects the wrong sensor height input
+    ATAT:
+        ATAT_ON: true
+        # 22.05.02 Update 
+        # IMPORTANT - `max_r_for_ATAT` affects the quality of the estimation of sensor height
+        # If it is too large, then the z-elevation values of the bins become more ambiguous
+        # If it is too small, there is a potential risk that does not include the cloud points in the vicinity of the vehicles/mobile robots
+        # Therefore, it should be set appropriately!
+        max_r_for_ATAT: 5.0
+        num_sectors_for_ATAT: 20
+        noise_bound: 0.2
+
     uniform: # deprecated
         num_rings: 16
         num_sectors: 54
