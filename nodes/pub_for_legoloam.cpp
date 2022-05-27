@@ -66,11 +66,8 @@ void callbackNode(const sensor_msgs::PointCloud2::ConstPtr& msg) {
     cloud_estimate.ground = msg_ground;
     EstimatePublisher.publish(cloud_estimate);
 
-    /*
-    CloudPublisher.publish(cloud2msg(pc_curr));
     PositivePublisher.publish(cloud2msg(pc_ground));
     NegativePublisher.publish(cloud2msg(pc_non_ground));
-    */
 }
 
 int main(int argc, char **argv) {
