@@ -86,11 +86,15 @@ cd .. && catkin build patchwork
 
 ## How to Run Patchwork
 
-We provide three examples
+We provide four examples:
 
-* Offline KITTI dataset
-* Online (ROS Callback) KITTI dataset
-* Own dataset using pcd files
+* How to run Patchwork in SemanticKITTI dataset
+    * Offline KITTI dataset
+    * Online (ROS Callback) KITTI dataset
+
+* How to run Patchwork in your own dataset
+    * Offline by loading pcd files
+    * Online (ROS Callback) using your ROS bag file
 
 ### Offline KITTI dataset
 
@@ -127,23 +131,24 @@ You can directly feel the speed of Patchwork! :wink:
 
 We also provide rosbag example. If you run our patchwork via rosbag, please refer to this example.
 
-1. Download readymade rosbag 
+1. After building this package, run the roslaunch as follows:
 
 ```
-wget https://urserver.kaist.ac.kr/publicdata/patchwork/kitti_00_xyzilid.bag
+roslaunch patchwork run_patchwork.launch is_kitti:=true
 ```
 
-2. After building this package, run the roslaunch as follows:
+Then you can see the below message:
 
+![](/img/kitti_activated.png)
+
+2. Set the `data_path` in `launch/kitti_publisher.launch` for your machine, which is same with the aforementioned parameter in "Offline KITTI dataset" part. 
+
+3. Then, run ros player (please refer to `nodes/ros_kitti_publisher.cpp`).
+ 
 ```
-roslaunch patchwork rosbag_kitti.launch
+roslaunch patchwork kitti_publisher.launch
 ```
 
-3. Then play the rosbag file in another command
-
-```
-rosbag play kitti_00_xyzilid.bag
-```
 
 ### Own dataset using pcd files
 
@@ -177,7 +182,7 @@ roslaunch patchwork offline_ouster128.launch
 2. To do so, remap the topic of subscriber, e.g. add remap line as follows:
 
 ```
-<remap from="/node" to="$YOUR_LIDAR_TOPIC_NAME$"/>
+<remap from="/patchwork/cloud" to="$YOUR_LIDAR_TOPIC_NAME$"/>
 ```
 
 3. In addition, minor modification of `ros_kitti.cpp` is necessary by refering to `offline_own_data.cpp`.

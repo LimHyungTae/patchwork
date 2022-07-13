@@ -1,0 +1,20 @@
+<launch>
+<rosparam command="load" file="$(find patchwork)/config/params.yaml" />
+
+<arg name="is_kitti" default="true" />
+<param name="/is_kitti" type="bool" value="$(arg is_kitti)" />
+
+<group if="$(eval arg('is_kitti'))">
+    <node name="$(anon rviz_kitti)" pkg="rviz" type="rviz" args="-d $(find patchwork)/rviz/patchwork_viz.rviz"/>
+</group>
+
+<group unless="$(eval arg('is_kitti'))">
+    <node name="$(anon rviz_kitti)" pkg="rviz" type="rviz" args="-d $(find patchwork)/rviz/patchwork_own_data.rviz"/>
+</group>
+
+<node name="$(anon ros_kitti)" pkg="patchwork" type="ros_kitti" output="screen">
+    <remap from="/patchwork/cloud" to="/patchwork/cloud"/>
+</node>
+
+
+</launch>

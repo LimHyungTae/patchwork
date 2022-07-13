@@ -28,10 +28,10 @@ public:
         }
 
         if (num_frames_ == 0) {
-            std::cerr << "Error: no files in " << pc_path_ << std::endl;
+            std::cerr << "\033[1;31mError: No files in " << pc_path_ << "\033[0m" << std::endl;
         }
         if (num_frames_ != num_labels) {
-            std::cerr << "Error: The # of point clouds and # of labels are not same" << std::endl;
+            std::cerr << "\033[1;31mError: The # of point clouds and # of labels are not same\033[0m" << std::endl;
         }
     }
 

@@ -51,8 +51,8 @@ int main(int argc, char **argv) {
     PatchworkGroundSeg.reset(new PatchWork<PointType>(&nh));
 
     CloudPublisher  = nh.advertise<sensor_msgs::PointCloud2>("/benchmark/cloud", 100);
-    PositivePublisher     = nh.advertise<sensor_msgs::PointCloud2>("/benchmark/P", 100);
-    NegativePublisher     = nh.advertise<sensor_msgs::PointCloud2>("/benchmark/N", 100);
+    PositivePublisher     = nh.advertise<sensor_msgs::PointCloud2>("/patchwork/ground", 100);
+    NegativePublisher     = nh.advertise<sensor_msgs::PointCloud2>("/patchwork/non_ground", 100);
 
     string example_filename = "/catkin_ws/src/patchwork/materials/1629959697.120137.360lidar.pcd";
     string filename = std::getenv("HOME") + example_filename;

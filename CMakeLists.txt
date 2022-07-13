@@ -54,6 +54,10 @@ add_executable(ros_kitti nodes/ros_kitti.cpp)
 target_link_libraries(ros_kitti ${catkin_LIBRARIES} ${PCL_LIBRARIES})
 add_dependencies(ros_kitti patchwork_generate_messages_cpp)
 
+add_executable(ros_kitti_publisher nodes/ros_kitti_publisher.cpp)
+target_link_libraries(ros_kitti_publisher ${catkin_LIBRARIES} ${PCL_LIBRARIES})
+add_dependencies(ros_kitti_publisher patchwork_generate_messages_cpp)
+
 add_executable(pub_for_legoloam nodes/pub_for_legoloam.cpp)
 target_link_libraries(pub_for_legoloam ${catkin_LIBRARIES} ${PCL_LIBRARIES})
 add_dependencies(pub_for_legoloam patchwork_generate_messages_cpp)

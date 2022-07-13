@@ -1,0 +1,9 @@
+<launch>
+<rosparam param="/algorithm">"patchwork"</rosparam>
+<rosparam param="/seq">"00"</rosparam>
+<rosparam param="/data_path">"/media/shapelim/UX960NVMe11/kitti_semantic/dataset/sequences/00"</rosparam>
+
+<!-- For pseudo-publisher -->
+<node name="$(anon ros_kitti_publisher)" pkg="patchwork" type="ros_kitti_publisher" output="screen" />
+
+</launch>

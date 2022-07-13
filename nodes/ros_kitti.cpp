@@ -10,6 +10,8 @@
 using namespace std;
 
 ros::Publisher CloudPublisher;
+ros::Publisher GroundPublisher;
+ros::Publisher NonGroundPublisher;
 ros::Publisher TPPublisher;
 ros::Publisher FPPublisher;
 ros::Publisher FNPublisher;
@@ -25,6 +27,7 @@ string      algorithm;
 string      mode;
 string      seq;
 bool        save_flag;
+bool        is_kitti;
 
 void pub_score(std::string mode, double measure) {
     static int                 SCALE = 5;
@@ -75,9 +78,9 @@ sensor_msgs::PointCloud2 cloud2msg(pcl::PointCloud<T> cloud, std::string frame_i
     return cloud_ROS;
 }
 
-void callbackNode(const patchwork::node::ConstPtr &msg) {
+void callbackNode(const sensor_msgs::PointCloud2::ConstPtr &msg) {
     cout << msg->header.seq << "th node come" << endl;
-    pcl::PointCloud<PointType> pc_curr = cloudmsg2cloud<PointType>(msg->lidar);
+    pcl::PointCloud<PointType> pc_curr = cloudmsg2cloud<PointType>(*msg);
     pcl::PointCloud<PointType> pc_ground;
     pcl::PointCloud<PointType> pc_non_ground;
 
@@ -108,25 +111,35 @@ void callbackNode(const patchwork::node::ConstPtr &msg) {
     pcl::PointCloud<PointType> FP;
     pcl::PointCloud<PointType> FN;
     pcl::PointCloud<PointType> TN;
-    discern_ground(pc_ground, TP, FP);
-    discern_ground(pc_non_ground, FN, TN);
 
-    if (save_flag) {
-        std::map<int, int> pc_curr_gt_counts, g_est_gt_counts;
-        double             accuracy;
-        save_all_accuracy(pc_curr, pc_ground, acc_filename, accuracy, pc_curr_gt_counts, g_est_gt_counts);
+    if (is_kitti) {
+        discern_ground(pc_ground, TP, FP);
+        discern_ground(pc_non_ground, FN, TN);
 
-        std::string count_str        = std::to_string(msg->header.seq);
-        std::string count_str_padded = std::string(NUM_ZEROS - count_str.length(), '0') + count_str;
-        std::string pcd_filename     = pcd_savepath + "/" + count_str_padded + ".pcd";
+        if (save_flag) {
+            std::map<int, int> pc_curr_gt_counts, g_est_gt_counts;
+            double accuracy;
+            save_all_accuracy(pc_curr, pc_ground, acc_filename, accuracy, pc_curr_gt_counts, g_est_gt_counts);
+
+            std::string count_str = std::to_string(msg->header.seq);
+            std::string count_str_padded = std::string(NUM_ZEROS - count_str.length(), '0') + count_str;
+            std::string pcd_filename = pcd_savepath + "/" + count_str_padded + ".pcd";
 
 //    pc2pcdfile(TP, FP, FN, TN, pcd_filename);
+        }
     }
-    // Write data
+
     CloudPublisher.publish(cloud2msg(pc_curr));
-    TPPublisher.publish(cloud2msg(TP));
-    FPPublisher.publish(cloud2msg(FP));
-    FNPublisher.publish(cloud2msg(FN));
+    if (is_kitti) {
+        TPPublisher.publish(cloud2msg(TP));
+        FPPublisher.publish(cloud2msg(FP));
+        FNPublisher.publish(cloud2msg(FN));
+    } else {
+        // Since other dataset has no labels,
+        // so only estimated ground points / non-ground points are available
+        GroundPublisher.publish(cloud2msg(pc_ground));
+        NonGroundPublisher.publish(cloud2msg(pc_non_ground));
+    }
     pub_score("p", precision);
     pub_score("r", recall);
 }
@@ -136,6 +149,7 @@ int main(int argc, char **argv) {
     ros::NodeHandle nh;
     nh.param<string>("/algorithm", algorithm, "patchwork");
     nh.param<string>("/seq", seq, "00");
+    nh.param<bool>("/is_kitti", is_kitti, true);
 
     PatchworkGroundSeg.reset(new PatchWork<PointType>(&nh));
 
@@ -143,12 +157,17 @@ int main(int argc, char **argv) {
     TPPublisher     = nh.advertise<sensor_msgs::PointCloud2>("/benchmark/TP", 100);
     FPPublisher     = nh.advertise<sensor_msgs::PointCloud2>("/benchmark/FP", 100);
     FNPublisher     = nh.advertise<sensor_msgs::PointCloud2>("/benchmark/FN", 100);
+    GroundPublisher = nh.advertise<sensor_msgs::PointCloud2>("/patchwork/ground", 100);
+    NonGroundPublisher = nh.advertise<sensor_msgs::PointCloud2>("/patchwork/non_ground", 100);
 
     PrecisionPublisher = nh.advertise<visualization_msgs::Marker>("/precision", 1);
     RecallPublisher    = nh.advertise<visualization_msgs::Marker>("/recall", 1);
 
-    ros::Subscriber NodeSubscriber = nh.subscribe<patchwork::node>("/node", 5000, callbackNode);
+    ros::Subscriber NodeSubscriber = nh.subscribe<sensor_msgs::PointCloud2>("/patchwork/cloud", 5000, callbackNode);
 
+    if (is_kitti) {
+        std::cout << "\033[1;33mKITTI mode is activated. If not, please check `is_kitti` parameter\033[0m" << std::endl;
+    }
     ros::spin();
 
     return 0;
