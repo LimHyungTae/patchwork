@@ -143,7 +143,7 @@ Then you can see the below message:
 
 2. Set the `data_path` in `launch/kitti_publisher.launch` for your machine, which is same with the aforementioned parameter in "Offline KITTI dataset" part. 
 
-3. Then, run ros player (please refer to `nodes/ros_kitti_publisher.cpp`).
+3. Then, run ros player (please refer to `nodes/ros_kitti_publisher.cpp`) by following command at another terminal window:
  
 ```
 roslaunch patchwork kitti_publisher.launch
@@ -175,17 +175,31 @@ For better understanding of the parameters of Patchwork, please read [our wiki, 
 roslaunch patchwork offline_ouster128.launch
 ```
 
-#### Online (via rosbag)
+#### Online (via your ROS bag file)
 
-1. Utilize `rosbag_kitti.launch`.
+It is easy by re-using `run_patchwork.launch`.
 
-2. To do so, remap the topic of subscriber, e.g. add remap line as follows:
+1. Remap the topic of subscriber, i.g. modify remap line as follows:
 
 ```
 <remap from="/patchwork/cloud" to="$YOUR_LIDAR_TOPIC_NAME$"/>
 ```
 
-3. In addition, minor modification of `ros_kitti.cpp` is necessary by refering to `offline_own_data.cpp`.
+Note that the type subscribed data is `sensor_msgs::PointCloud2`.
+
+2. Next, launch the roslaunch file as follows:
+
+```
+roslaunch patchwork run_patchwork.launch is_kitti:=false
+```
+
+Note that `is_kitti=false` is important! Because it decides which rviz is opened. The rviz shows only estimated ground and non-ground because your own dataset may have no point-wise labels.
+
+3. Then play your bag file!
+ 
+```
+rosbag play $YOUR_BAG_FILE_NAME$.bag
+```
 
 ## Citation
 
