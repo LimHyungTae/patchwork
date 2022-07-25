@@ -10,7 +10,7 @@ Patchwork                  |  Concept of our method (CZM & GLE)
 
 It's an overall updated version of **R-GPF of ERASOR** [**[Code](https://github.com/LimHyungTae/ERASOR)**] [**[Paper](https://arxiv.org/abs/2103.04316)**]. 
 
-## NEWS (22.07.13)
+## NEWS (22.07.25)
 - Pybinding + more advanced version is now available on [Patchwork++](https://github.com/url-kaist/patchwork-plusplus) as a preprocessing step for deep learning users!
 
 ## NEWS (22.07.13)
