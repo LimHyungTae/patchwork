@@ -442,6 +442,9 @@ void PatchWork<PointT>::estimate_sensor_height(pcl::PointCloud<PointT> cloud_in)
     vector<double> linearities;
     vector<double> planarities;
     for (int i = 0; i < num_sectors_for_ATAT_; ++i) {
+
+        if(ring_for_ATAT[i].size() < num_min_pts_ ){ continue; }
+
         pcl::PointCloud<PointT> dummy_est_ground;
         pcl::PointCloud<PointT> dummy_est_non_ground;
         extract_piecewiseground(0, ring_for_ATAT[i], dummy_est_ground, dummy_est_non_ground, false);
