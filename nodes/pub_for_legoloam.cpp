@@ -82,12 +82,12 @@ int main(int argc, char **argv) {
     PatchworkGroundSeg.reset(new PatchWork<PointType>(&nh));
 
     /* Publisher for source cloud, ground, non-ground */
-    CloudPublisher  = nh.advertise<sensor_msgs::PointCloud2>("/benchmark/cloud", 100);
-    PositivePublisher     = nh.advertise<sensor_msgs::PointCloud2>("/benchmark/P", 100);
-    NegativePublisher     = nh.advertise<sensor_msgs::PointCloud2>("/benchmark/N", 100);
+    CloudPublisher  = nh.advertise<sensor_msgs::PointCloud2>("/benchmark/cloud", 100, true);
+    PositivePublisher     = nh.advertise<sensor_msgs::PointCloud2>("/benchmark/P", 100, true);
+    NegativePublisher     = nh.advertise<sensor_msgs::PointCloud2>("/benchmark/N", 100, true);
 
     /* Publisher for combined msg of source cloud, ground cloud */
-    EstimatePublisher = nh.advertise<patchwork::ground_estimate>("/benchmark/ground_estimate", 100);
+    EstimatePublisher = nh.advertise<patchwork::ground_estimate>("/benchmark/ground_estimate", 100, true);
 
     ros::Subscriber NodeSubscriber = nh.subscribe<sensor_msgs::PointCloud2>("/node", 5000, callbackNode);
 

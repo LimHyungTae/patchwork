@@ -49,7 +49,7 @@ int main(int argc, char**argv) {
     nh.param<string>("/data_path", data_path, "/");
 
     ros::Rate r(10);
-    ros::Publisher CloudPublisher = nh.advertise<sensor_msgs::PointCloud2>("/patchwork/cloud", 100);
+    ros::Publisher CloudPublisher = nh.advertise<sensor_msgs::PointCloud2>("/patchwork/cloud", 100, true);
 
     signal(SIGINT, signal_callback_handler);
 

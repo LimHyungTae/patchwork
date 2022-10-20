@@ -93,12 +93,12 @@ int main(int argc, char**argv) {
     nh.param<string>("/seq", seq, "00");
     nh.param<string>("/data_path", data_path, "/");
 
-    CloudPublisher     = nh.advertise<sensor_msgs::PointCloud2>("/benchmark/cloud", 100);
-    TPPublisher        = nh.advertise<sensor_msgs::PointCloud2>("/benchmark/TP", 100);
-    FPPublisher        = nh.advertise<sensor_msgs::PointCloud2>("/benchmark/FP", 100);
-    FNPublisher        = nh.advertise<sensor_msgs::PointCloud2>("/benchmark/FN", 100);
-    PrecisionPublisher = nh.advertise<visualization_msgs::Marker>("/precision", 1);
-    RecallPublisher    = nh.advertise<visualization_msgs::Marker>("/recall", 1);
+    CloudPublisher     = nh.advertise<sensor_msgs::PointCloud2>("/benchmark/cloud", 100, true);
+    TPPublisher        = nh.advertise<sensor_msgs::PointCloud2>("/benchmark/TP", 100, true);
+    FPPublisher        = nh.advertise<sensor_msgs::PointCloud2>("/benchmark/FP", 100, true);
+    FNPublisher        = nh.advertise<sensor_msgs::PointCloud2>("/benchmark/FN", 100, true);
+    PrecisionPublisher = nh.advertise<visualization_msgs::Marker>("/precision", 1, true);
+    RecallPublisher    = nh.advertise<visualization_msgs::Marker>("/recall", 1, true);
 
     signal(SIGINT, signal_callback_handler);
 

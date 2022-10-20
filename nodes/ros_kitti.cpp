@@ -153,15 +153,15 @@ int main(int argc, char **argv) {
 
     PatchworkGroundSeg.reset(new PatchWork<PointType>(&nh));
 
-    CloudPublisher  = nh.advertise<sensor_msgs::PointCloud2>("/benchmark/cloud", 100);
-    TPPublisher     = nh.advertise<sensor_msgs::PointCloud2>("/benchmark/TP", 100);
-    FPPublisher     = nh.advertise<sensor_msgs::PointCloud2>("/benchmark/FP", 100);
-    FNPublisher     = nh.advertise<sensor_msgs::PointCloud2>("/benchmark/FN", 100);
-    GroundPublisher = nh.advertise<sensor_msgs::PointCloud2>("/patchwork/ground", 100);
-    NonGroundPublisher = nh.advertise<sensor_msgs::PointCloud2>("/patchwork/non_ground", 100);
+    CloudPublisher  = nh.advertise<sensor_msgs::PointCloud2>("/benchmark/cloud", 100, true);
+    TPPublisher     = nh.advertise<sensor_msgs::PointCloud2>("/benchmark/TP", 100, true);
+    FPPublisher     = nh.advertise<sensor_msgs::PointCloud2>("/benchmark/FP", 100, true);
+    FNPublisher     = nh.advertise<sensor_msgs::PointCloud2>("/benchmark/FN", 100, true);
+    GroundPublisher = nh.advertise<sensor_msgs::PointCloud2>("/patchwork/ground", 100, true);
+    NonGroundPublisher = nh.advertise<sensor_msgs::PointCloud2>("/patchwork/non_ground", 100, true);
 
-    PrecisionPublisher = nh.advertise<visualization_msgs::Marker>("/precision", 1);
-    RecallPublisher    = nh.advertise<visualization_msgs::Marker>("/recall", 1);
+    PrecisionPublisher = nh.advertise<visualization_msgs::Marker>("/precision", 1, true);
+    RecallPublisher    = nh.advertise<visualization_msgs::Marker>("/recall", 1, true);
 
     ros::Subscriber NodeSubscriber = nh.subscribe<sensor_msgs::PointCloud2>("/patchwork/cloud", 5000, callbackNode);
 
