@@ -20,6 +20,8 @@ boost::shared_ptr<PatchWork<PointType> > PatchworkGroundSeg;
 std::string output_filename;
 std::string acc_filename, pcd_savepath;
 string      algorithm;
+string      extension;
+string      file_dir;
 string      mode;
 string      seq;
 bool        save_flag;
@@ -41,11 +43,27 @@ sensor_msgs::PointCloud2 cloud2msg(pcl::PointCloud<T> cloud, std::string frame_i
     return cloud_ROS;
 }
 
+int count_num_files(const string folder_dir, const string extension) {
+    int num_frames = 0;
+    for (num_frames = 0;; num_frames++) {
+        std::string filename = (boost::format("%s/%06d.%s") % folder_dir % num_frames % extension).str();
+        if (!boost::filesystem::exists(filename)) {
+          break;
+        }
+    }
+    if (!num_frames) throw invalid_argument("Something is wrong. The # of files is zero.");
+
+    return num_frames;
+}
 
 int main(int argc, char **argv) {
+    bool stop_each_frame;
     ros::init(argc, argv, "Benchmark");
     ros::NodeHandle nh;
     nh.param<string>("/algorithm", algorithm, "patchwork");
+    nh.param<string>("/extension", extension, "pcd");
+    nh.param<string>("/file_dir", file_dir, "/catkin_ws/src/patchwork/materials");
+    nh.param<bool>("/stop_each_frame", stop_each_frame, false);
     ros::Rate loop_rate(10);
 
     PatchworkGroundSeg.reset(new PatchWork<PointType>(&nh));
@@ -54,36 +72,37 @@ int main(int argc, char **argv) {
     PositivePublisher     = nh.advertise<sensor_msgs::PointCloud2>("/patchwork/ground", 100, true);
     NegativePublisher     = nh.advertise<sensor_msgs::PointCloud2>("/patchwork/non_ground", 100, true);
 
-    string example_filename = "/catkin_ws/src/patchwork/materials/1629959697.120137.360lidar.pcd";
-    string filename = std::getenv("HOME") + example_filename;
+    string abs_file_dir = std::getenv("HOME") + file_dir;
 
-    // An example for Loading own data
-    pcl::PointCloud<PointType> pc_curr;
-    if (pcl::io::loadPCDFile<PointType> (filename, pc_curr) == -1) //* load the file
-    {
-        PCL_ERROR ("Couldn't read file test_pcd.pcd \n");
-        return (-1);
-    }
+    int num_pcds = count_num_files(abs_file_dir, extension);
 
-    pcl::PointCloud<PointType> pc_ground;
-    pcl::PointCloud<PointType> pc_non_ground;
+    for (int i = 0; i < num_pcds; ++i) {
+        // An example for Loading own data
+        pcl::PointCloud<PointType> pc_curr;
+        std::string filename = (boost::format("%s/%06d.%s") % abs_file_dir % i % extension).str();
+        if (pcl::io::loadPCDFile<PointType>(filename, pc_curr) == -1) //* load the file
+        {
+            PCL_ERROR ("Couldn't read file test_pcd.pcd \n");
+            return (-1);
+        }
 
-    static double time_taken;
-    cout << "Operating patchwork..." << endl;
+        pcl::PointCloud<PointType> pc_ground;
+        pcl::PointCloud<PointType> pc_non_ground;
 
-    while (ros::ok()){
+        static double time_taken;
+        cout << i << "th operation..." << endl;
+
         PatchworkGroundSeg->estimate_ground(pc_curr, pc_ground, pc_non_ground, time_taken);
         CloudPublisher.publish(cloud2msg(pc_curr));
         PositivePublisher.publish(cloud2msg(pc_ground));
         NegativePublisher.publish(cloud2msg(pc_non_ground));
-        ros::spinOnce();
-        loop_rate.sleep();
+
+        if (stop_each_frame) {
+            cout<< "STOP!" <<endl;
+            cin.ignore();
+        }
     }
-
-
-
-
-
+    ros::spin();
 
     return 0;
 }
