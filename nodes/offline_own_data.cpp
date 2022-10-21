@@ -6,6 +6,7 @@
 #define PCL_NO_PRECOMPILE
 #include "patchwork/patchwork.hpp"
 #include <cstdlib>
+#include <signal.h>
 
 
 using PointType = pcl::PointXYZ;
@@ -43,6 +44,12 @@ sensor_msgs::PointCloud2 cloud2msg(pcl::PointCloud<T> cloud, std::string frame_i
     return cloud_ROS;
 }
 
+void signal_callback_handler(int signum) {
+    cout << "Caught Ctrl + c " << endl;
+    // Terminate program
+    exit(signum);
+}
+
 int count_num_files(const string folder_dir, const string extension) {
     int num_frames = 0;
     for (num_frames = 0;; num_frames++) {
@@ -62,7 +69,7 @@ int main(int argc, char **argv) {
     ros::NodeHandle nh;
     nh.param<string>("/algorithm", algorithm, "patchwork");
     nh.param<string>("/extension", extension, "pcd");
-    nh.param<string>("/file_dir", file_dir, "/catkin_ws/src/patchwork/materials");
+    nh.param<string>("/file_dir", file_dir, "");
     nh.param<bool>("/stop_each_frame", stop_each_frame, false);
     ros::Rate loop_rate(10);
 
@@ -72,14 +79,14 @@ int main(int argc, char **argv) {
     PositivePublisher     = nh.advertise<sensor_msgs::PointCloud2>("/patchwork/ground", 100, true);
     NegativePublisher     = nh.advertise<sensor_msgs::PointCloud2>("/patchwork/non_ground", 100, true);
 
-    string abs_file_dir = std::getenv("HOME") + file_dir;
-
-    int num_pcds = count_num_files(abs_file_dir, extension);
+    cout << "\033[1;32mTarget directory: " << file_dir << endl;
+    int num_pcds = count_num_files(file_dir, extension);
 
     for (int i = 0; i < num_pcds; ++i) {
+        signal(SIGINT, signal_callback_handler);
         // An example for Loading own data
         pcl::PointCloud<PointType> pc_curr;
-        std::string filename = (boost::format("%s/%06d.%s") % abs_file_dir % i % extension).str();
+        std::string filename = (boost::format("%s/%06d.%s") % file_dir % i % extension).str();
         if (pcl::io::loadPCDFile<PointType>(filename, pc_curr) == -1) //* load the file
         {
             PCL_ERROR ("Couldn't read file test_pcd.pcd \n");
