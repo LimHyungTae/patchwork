@@ -177,6 +177,7 @@ For better understanding of the parameters of Patchwork, please read [our wiki, 
 
 2. Please check the output by following command and corresponding files:
 
+3. Set appropriate absolute file directory, i.e. `file_dir`, in `offline_ouster128.launch` 
 ```
 roslaunch patchwork offline_ouster128.launch
 ```
