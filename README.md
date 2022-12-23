@@ -10,6 +10,11 @@ Patchwork                  |  Concept of our method (CZM & GLE)
 
 It's an overall updated version of **R-GPF of ERASOR** [**[Code](https://github.com/LimHyungTae/ERASOR)**] [**[Paper](https://arxiv.org/abs/2103.04316)**]. 
 
+## NEWS (22.12.24)
+- Merry christmas eve XD! `include/label_generator` is added to make the `.label` file, following the SemanticKITTI format.
+- The `.label` files can be directly used in [3DUIS benchmark](https://github.com/PRBonn/3DUIS)
+- Thank [Lucas Nunes](https://scholar.google.com/citations?user=PCxhsf4AAAAJ&hl=en&oi=ao) and [Xieyuanli Chen](https://scholar.google.com/citations?user=DvrngV4AAAAJ&hl=en&oi=sra) for providing code snippets to save a `.label` file.
+
 ## NEWS (22.07.25)
 - Pybinding + more advanced version is now available on [Patchwork++](https://github.com/url-kaist/patchwork-plusplus) as a preprocessing step for deep learning users (i.e., python users can also use our robust ground segmentation)!
 

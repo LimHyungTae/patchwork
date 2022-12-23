@@ -2,8 +2,11 @@
 
 <node name="$(anon offline_kitti)" pkg="patchwork" type="offline_kitti" output="screen">
 <rosparam param="/algorithm">"patchwork"</rosparam> 
-<rosparam param="/seq">"00"</rosparam> 
-<rosparam param="/data_path">"/media/shapelim/UX960NVMe1/kitti_semantic/dataset/sequences/00"</rosparam> 
+<rosparam param="/save_flag">false</rosparam>
+<rosparam param="/use_sor_before_save">false</rosparam>
+<rosparam param="/start_frame">4390</rosparam> 
+<rosparam param="/end_frame">4531</rosparam> 
+<rosparam param="/data_path">"/media/shapelim/Elements/SemanticKITTI_w_gt/dataset/sequences/00"</rosparam> 
 </node>
 <node name="rviz" pkg="rviz" type="rviz" args="-d $(find patchwork)/rviz/patchwork_viz.rviz"/>
 

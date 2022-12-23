@@ -3,7 +3,6 @@
 #          So, it mostly have a positive value
 #          Note that if `patchwork/ATAT/ATAT_ON` is set to be true, the sensor_height is auto-calibrated
 sensor_height: 1.723
-save_flag: true
 
 # Extrinsics (Raw lidar coordinate -> Coordinate that is parallel to the X-Y plane of ground)
 # But, not in use

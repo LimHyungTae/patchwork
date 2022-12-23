@@ -63,7 +63,7 @@ target_link_libraries(pub_for_legoloam ${catkin_LIBRARIES} ${PCL_LIBRARIES})
 add_dependencies(pub_for_legoloam patchwork_generate_messages_cpp)
 
 add_executable(offline_kitti nodes/offline_kitti.cpp)
-target_link_libraries(offline_kitti ${catkin_LIBRARIES} ${PCL_LIBRARIES})
+target_link_libraries(offline_kitti ${catkin_LIBRARIES} ${PCL_LIBRARIES} stdc++fs)
 add_dependencies(offline_kitti patchwork_generate_messages_cpp)
 
 add_executable(offline_own_data nodes/offline_own_data.cpp)

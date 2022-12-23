@@ -33,6 +33,7 @@ public:
         if (num_frames_ != num_labels) {
             std::cerr << "\033[1;31mError: The # of point clouds and # of labels are not same\033[0m" << std::endl;
         }
+        std::cout << "Total " << num_frames_ << " files are loaded" << std::endl;
     }
 
     ~KittiLoader() {}
@@ -40,19 +41,17 @@ public:
     size_t size() const { return num_frames_; }
 
     template<typename T>
-    int get_cloud(size_t idx, pcl::PointCloud<T> &cloud) const {
+    void get_cloud(size_t idx, pcl::PointCloud<T> &cloud) const {
         std::string filename = (boost::format("%s/%06d.bin") % pc_path_ % idx).str();
         FILE *file = fopen(filename.c_str(), "rb");
         if (!file) {
-            std::cerr << "error: failed to load " << filename << std::endl;
-            return -1;
+            throw invalid_argument("Could not open the .bin file!");
         }
-
         std::vector<float> buffer(1000000);
         size_t num_points = fread(reinterpret_cast<char *>(buffer.data()), sizeof(float), buffer.size(), file) / 4;
         fclose(file);
 
-        cloud.resize(num_points);
+        cloud.points.resize(num_points);
         if (std::is_same<T, pcl::PointXYZ>::value) {
             for (int i = 0; i < num_points; i++) {
                 auto &pt = cloud.at(i);
@@ -68,16 +67,14 @@ public:
                 pt.z = buffer[i * 4 + 2];
                 pt.intensity = buffer[i * 4 + 3];
             }
-
         } else if (std::is_same<T, PointXYZILID>::value) {
             std::string label_name = (boost::format("%s/%06d.label") % label_path_ % idx).str();
+//            std::cout << label_name << std::endl;
             std::ifstream label_input(label_name, std::ios::binary);
             if (!label_input.is_open()) {
-                std::cerr << "Could not open the label!" << std::endl;
-                return -1;
+                throw invalid_argument("Could not open the label!");
             }
             label_input.seekg(0, std::ios::beg);
-
             std::vector<uint32_t> labels(num_points);
             label_input.read((char*)&labels[0], num_points * sizeof(uint32_t));
 
@@ -90,7 +87,6 @@ public:
                 pt.label = labels[i] & 0xFFFF;
                 pt.id = labels[i] >> 16;
             }
-
         }
     }
 
