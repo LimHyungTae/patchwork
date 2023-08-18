@@ -11,17 +11,27 @@
 #include <pcl/common/centroid.h>
 #include <pcl/io/pcd_io.h>
 
-#include <tbb/tbb.h>
 #include <tbb/parallel_for.h>
 
-#define MARKER_Z_VALUE -2.2
-#define UPRIGHT_ENOUGH 0.55 // cyan
-#define FLAT_ENOUGH 0.2 // green
-#define TOO_HIGH_ELEVATION 0.0 // blue
-#define TOO_TILTED 1.0 // red
-#define GLOBALLLY_TOO_HIGH_ELEVATION_THR 0.8
-
 #define NUM_HEURISTIC_MAX_PTS_IN_PATCH 3000
+#define MARKER_Z_VALUE -2.2
+
+// Below colors are for visualization purpose
+#define COLOR_CYAN 0.55  // cyan
+#define COLOR_GREEN 0.2  // green
+#define COLOR_BLUE 0.0   // blue
+#define COLOR_RED 1.0    // red
+#define COLOR_GLOBALLY_TOO_HIGH_ELEVATION 0.8 // I'm not sure...haha
+
+int NOT_ASSIGNED = -2;
+int FEW_POINTS = -1;
+int UPRIGHT_ENOUGH = 0; // cyan
+int FLAT_ENOUGH = 1; // green
+int TOO_HIGH_ELEVATION = 2; // blue
+int TOO_TILTED = 3; // red
+int GLOBALLY_TOO_HIGH_ELEVATION = 4;
+
+std::vector<float> COLOR_MAP = {COLOR_CYAN, COLOR_GREEN, COLOR_BLUE, COLOR_RED, COLOR_GLOBALLY_TOO_HIGH_ELEVATION};
 
 using Eigen::MatrixXf;
 using Eigen::JacobiSVD;
@@ -36,6 +46,24 @@ template<typename PointT>
 bool point_z_cmp(PointT a, PointT b) {
     return a.z < b.z;
 }
+struct PatchIdx
+{
+    int zone_idx_;
+    int ring_idx_;
+    int sector_idx_;
+    int concentric_idx_;
+};
+
+struct PCAFeature {
+    Eigen::Vector3f principal_;
+    Eigen::Vector3f normal_;
+    Eigen::Vector3f singular_values_;
+    Eigen::Vector3f mean_;
+    float    d_;
+    float    th_dist_d_;
+    float    linearity_;
+    float    planarity_;
+};
 
 template<typename PointT>
 class PatchWork {
@@ -119,15 +147,11 @@ public:
         poly_list_.header.frame_id = "/map";
         poly_list_.polygons.reserve(130000);
 
-        revert_pc.reserve(NUM_HEURISTIC_MAX_PTS_IN_PATCH);
-        ground_pc_.reserve(NUM_HEURISTIC_MAX_PTS_IN_PATCH);
-        non_ground_pc_.reserve(NUM_HEURISTIC_MAX_PTS_IN_PATCH);
-        regionwise_ground_.reserve(NUM_HEURISTIC_MAX_PTS_IN_PATCH);
-        regionwise_nonground_.reserve(NUM_HEURISTIC_MAX_PTS_IN_PATCH);
+        reverted_points_by_flatness_.reserve(NUM_HEURISTIC_MAX_PTS_IN_PATCH);
 
-        PlaneViz      = node_handle_.advertise<jsk_recognition_msgs::PolygonArray>("/gpf/plane", 100);
-        revert_pc_pub = node_handle_.advertise<sensor_msgs::PointCloud2>("/revert_pc", 100);
-        reject_pc_pub = node_handle_.advertise<sensor_msgs::PointCloud2>("/reject_pc", 100);
+        PlanePub      = node_handle_.advertise<jsk_recognition_msgs::PolygonArray>("/gpf/plane", 100);
+        RevertedCloudPub = node_handle_.advertise<sensor_msgs::PointCloud2>("/revert_pc", 100);
+        RejectedCloudPub = node_handle_.advertise<sensor_msgs::PointCloud2>("/reject_pc", 100);
 
         min_range_z2_ = min_ranges_[1];
         min_range_z3_ = min_ranges_[2];
@@ -148,12 +172,34 @@ public:
             initialize_zone(z, num_sectors_each_zone_.at(iter), num_rings_each_zone_.at(iter));
             ConcentricZoneModel_.push_back(z);
         }
+        PatchIdx patch_idx;
+        int concentric_idx_tmp = 0;
+        for (int zone_idx = 0; zone_idx < num_zones_; ++zone_idx) {
+            for (uint16_t ring_idx = 0; ring_idx < num_rings_each_zone_[zone_idx]; ++ring_idx) {
+                for (uint16_t sector_idx = 0; sector_idx < num_sectors_each_zone_[zone_idx]; ++sector_idx) {
+                    patch_idx.zone_idx_ = zone_idx;
+                    patch_idx.ring_idx_ = ring_idx;
+                    patch_idx.sector_idx_ = sector_idx;
+                    patch_idx.concentric_idx_ = concentric_idx_tmp;
+                    patch_indices_.emplace_back(patch_idx);
+                }
+                concentric_idx_tmp++;
+            }
+        }
+
+        int num_patches = patch_indices_.size();
+        indices_.resize(num_patches);
+        std::iota(indices_.begin(), indices_.end(), 0);
+        statuses_.assign(num_patches, NOT_ASSIGNED);
+        features_.resize(num_patches);
+        regionwise_grounds_.resize(num_patches);
+        regionwise_nongrounds_.resize(num_patches);
     }
 
     void estimate_ground(
-            const pcl::PointCloud<PointT> &cloudIn,
-            pcl::PointCloud<PointT> &cloudOut,
-            pcl::PointCloud<PointT> &cloudNonground,
+            const pcl::PointCloud<PointT> &cloud_in,
+            pcl::PointCloud<PointT> &ground,
+            pcl::PointCloud<PointT> &nonground,
             double &time_taken);
 
     geometry_msgs::PolygonStamped set_plane_polygon(const MatrixXf &normal_v, const float &d);
@@ -193,16 +239,17 @@ private:
     bool   using_global_thr_;
     double global_elevation_thr_;
 
-    float           d_;
-    MatrixXf        normal_;
-    VectorXf        singular_values_;
-    float           th_dist_d_;
-    Eigen::Matrix3f cov_;
-    Eigen::Vector4f pc_mean_;
     double          ring_size;
     double          sector_size;
     // For visualization
     bool            visualize_;
+
+    vector<int>      indices_;
+    vector<int>      statuses_;
+    vector<PatchIdx> patch_indices_;
+    vector<PCAFeature> features_;
+    vector<pcl::PointCloud<PointT>> regionwise_grounds_;
+    vector<pcl::PointCloud<PointT>> regionwise_nongrounds_;
 
     vector<int> num_sectors_each_zone_;
     vector<int> num_rings_each_zone_;
@@ -217,23 +264,13 @@ private:
 
     jsk_recognition_msgs::PolygonArray poly_list_;
 
-    ros::Publisher          PlaneViz, revert_pc_pub, reject_pc_pub;
-    pcl::PointCloud<PointT> revert_pc, reject_pc;
-    pcl::PointCloud<PointT> ground_pc_;
-    pcl::PointCloud<PointT> non_ground_pc_;
+    ros::Publisher          PlanePub, RevertedCloudPub, RejectedCloudPub;
+    pcl::PointCloud<PointT> reverted_points_by_flatness_, rejected_points_by_elevation_;
 
-    pcl::PointCloud<PointT> regionwise_ground_;
-    pcl::PointCloud<PointT> regionwise_nonground_;
-
-    void check_input_parameters_are_correct();
-
-    void cout_params();
 
     void initialize_zone(Zone &z, int num_sectors, int num_rings);
 
     void flush_patches_in_zone(Zone &patches, int num_sectors, int num_rings);
-
-    double calc_principal_variance(const Eigen::Matrix3f &cov, const Eigen::Vector4f &centroid);
 
     double xy2theta(const double &x, const double &y);
 
@@ -241,15 +278,14 @@ private:
 
     void pc2czm(const pcl::PointCloud<PointT> &src, std::vector<Zone> &czm);
 
-    void estimate_plane_(const pcl::PointCloud<PointT> &ground);
+    void estimate_plane_(const pcl::PointCloud<PointT> &ground, PCAFeature& feat);
 
     void extract_piecewiseground(
             const int zone_idx, const pcl::PointCloud<PointT> &src,
-            pcl::PointCloud<PointT> &dst,
-            pcl::PointCloud<PointT> &non_ground_dst,
+            PCAFeature &feat,
+            pcl::PointCloud<PointT> &regionwise_ground,
+            pcl::PointCloud<PointT> &regionwise_nonground,
             bool is_h_available=true);
-
-    void estimate_plane_(const int zone_idx, const pcl::PointCloud<PointT> &ground);
 
     double consensus_set_based_height_estimation(const Eigen::RowVectorXd& X,
                                                  const Eigen::RowVectorXd& ranges,
@@ -261,20 +297,20 @@ private:
             const int zone_idx, const pcl::PointCloud<PointT> &p_sorted,
             pcl::PointCloud<PointT> &init_seeds, bool is_h_available=true);
 
+    void check_input_parameters_are_correct();
+
+    void cout_params();
+
     /***
      * For visulization of Ground Likelihood Estimation
      */
-    geometry_msgs::PolygonStamped set_polygons(int r_idx, int theta_idx, int num_split);
-
     geometry_msgs::PolygonStamped set_polygons(int zone_idx, int r_idx, int theta_idx, int num_split);
 
-    void set_ground_likelihood_estimation_status(
-            const int k, const int ring_idx,
+    int determine_ground_likelihood_estimation_status(
             const int concentric_idx,
             const double z_vec,
             const double z_elevation,
             const double surface_variable);
-
 };
 
 
@@ -305,21 +341,28 @@ void PatchWork<PointT>::flush_patches_in_zone(Zone &patches, int num_sectors, in
 
 template<typename PointT>
 inline
-void PatchWork<PointT>::estimate_plane_(const pcl::PointCloud<PointT> &ground) {
-    pcl::computeMeanAndCovarianceMatrix(ground, cov_, pc_mean_);
+void PatchWork<PointT>::estimate_plane_(const pcl::PointCloud<PointT> &ground, PCAFeature& feat) {
+    Eigen::Vector4f pc_mean;
+    Eigen::Matrix3f cov;
+    pcl::computeMeanAndCovarianceMatrix(ground, cov, pc_mean);
+
     // Singular Value Decomposition: SVD
-    Eigen::JacobiSVD<Eigen::MatrixXf> svd(cov_, Eigen::DecompositionOptions::ComputeFullU);
-    singular_values_ = svd.singularValues();
+    Eigen::JacobiSVD<Eigen::MatrixXf> svd(cov, Eigen::DecompositionOptions::ComputeFullU);
+    feat.singular_values_ = svd.singularValues();
+
+    feat.linearity_ = ( feat.singular_values_(0) - feat.singular_values_(1) ) / feat.singular_values_(0);
+    feat.planarity_ = ( feat.singular_values_(1) - feat.singular_values_(2) ) / feat.singular_values_(0);
 
     // use the least singular vector as normal
-    normal_ = (svd.matrixU().col(2));
+    feat.normal_ = (svd.matrixU().col(2));
+    if (feat.normal_(2, 0) < 0) { // z 방향 vector는 위를 무조건 향하게 해야 함
+        feat.normal_ = -feat.normal_;
+    }
     // mean ground seeds value
-    Eigen::Vector3f seeds_mean = pc_mean_.head<3>();
-
+    feat.mean_ = pc_mean.head<3>();
     // according to normal.T*[x,y,z] = -d
-    d_         = -(normal_.transpose() * seeds_mean)(0, 0);
-    // set distance threhold to `th_dist - d`
-    th_dist_d_ = th_dist_ - d_;
+    feat.d_ = -(feat.normal_.transpose() * feat.mean_)(0, 0);
+    feat.th_dist_d_ = th_dist_ - feat.d_;
 }
 
 template<typename PointT>
@@ -450,20 +493,17 @@ void PatchWork<PointT>::estimate_sensor_height(pcl::PointCloud<PointT> cloud_in)
 
         pcl::PointCloud<PointT> dummy_est_ground;
         pcl::PointCloud<PointT> dummy_est_non_ground;
-        extract_piecewiseground(0, ring_for_ATAT[i], dummy_est_ground, dummy_est_non_ground, false);
+        PCAFeature feat;
+        extract_piecewiseground(0, ring_for_ATAT[i], feat, dummy_est_ground, dummy_est_non_ground, false);
 
-        const double ground_z_vec       = abs(normal_(2, 0));
-        const double ground_z_elevation = pc_mean_(2, 0);
-        const double linearity   =
-                (singular_values_(0) - singular_values_(1)) / singular_values_(0);
-        const double planarity   =
-                (singular_values_(1) - singular_values_(2)) / singular_values_(0);
+        const double ground_z_vec       = abs(feat.normal_(2));
+        const double ground_z_elevation = feat.mean_(2);
 
         // Check whether the vector is sufficiently upright and flat
-        if (ground_z_vec > uprightness_thr_ && linearity < 0.9) {
+        if (ground_z_vec > uprightness_thr_ && feat.linearity_ < 0.9) {
             ground_elevations_wrt_the_origin.push_back(ground_z_elevation);
-            linearities.push_back(linearity);
-            planarities.push_back(planarity);
+            linearities.push_back(feat.linearity_);
+            planarities.push_back(feat.planarity_);
         }
     }
 
@@ -490,8 +530,8 @@ template<typename PointT>
 inline
 void PatchWork<PointT>::estimate_ground(
         const pcl::PointCloud<PointT> &cloud_in,
-        pcl::PointCloud<PointT> &cloud_out,
-        pcl::PointCloud<PointT> &cloud_nonground,
+        pcl::PointCloud<PointT> &ground,
+        pcl::PointCloud<PointT> &nonground,
         double &time_taken) {
 
     // Just for visualization
@@ -509,164 +549,164 @@ void PatchWork<PointT>::estimate_ground(
     double                  t_total_ground   = 0.0;
     double                  t_total_estimate = 0.0;
     // 1.Msg to pointcloud
-    pcl::PointCloud<PointT> laserCloudIn;
-    laserCloudIn = cloud_in;
+    pcl::PointCloud<PointT> cloud_in_tmp = cloud_in;
 
     start = ros::Time::now().toSec();
 
-    // 22.05.02 Update
-    // Global sorting is deprecated
-//    sort(laserCloudIn.points.begin(), laserCloudIn.end(), point_z_cmp<PointT>);
-
-    t0 = ros::Time::now().toSec();
-    // 2.Error point removal
+    // Error point removal
     // As there are some error mirror reflection under the ground,
     // Sort point according to height, here uses z-axis in default
     // -2.0 is a rough criteria
     int i = 0;
-    while (i < laserCloudIn.points.size()) {
-        if (laserCloudIn.points[i].z < -sensor_height_ - 2.0) {
-            std::iter_swap(laserCloudIn.points.begin() + i, laserCloudIn.points.end() - 1);
-            laserCloudIn.points.pop_back();
+    while (i < cloud_in_tmp.points.size()) {
+        if (cloud_in_tmp.points[i].z < -sensor_height_ - 2.0) {
+            std::iter_swap(cloud_in_tmp.points.begin() + i, cloud_in_tmp.points.end() - 1);
+            cloud_in_tmp.points.pop_back();
         } else {
             ++i;
         }
     }
 
     t1 = ros::Time::now().toSec();
-    // 4. pointcloud -> regionwise setting
+
     for (int k = 0; k < num_zones_; ++k) {
         flush_patches_in_zone(ConcentricZoneModel_[k], num_sectors_each_zone_[k], num_rings_each_zone_[k]);
     }
 
-    double t11 = ros::Time::now().toSec();
-    pc2czm(laserCloudIn, ConcentricZoneModel_);
-    t2 = ros::Time::now().toSec();
-    string output_filename = "/home/shapelim/pc2czm.txt";
-    ofstream ground_output(output_filename, ios::app);
-    ground_output << t2-t11 << "\n";
-    ground_output.close();
+    pc2czm(cloud_in_tmp, ConcentricZoneModel_);
 
-    cloud_out.clear();
-    cloud_nonground.clear();
-    revert_pc.clear();
-    reject_pc.clear();
+    ground.clear();
+    nonground.clear();
+    reverted_points_by_flatness_.clear();
+    rejected_points_by_elevation_.clear();
 
-    int      concentric_idx = 0;
-    for (int k              = 0; k < num_zones_; ++k) {
-        auto          &zone    = ConcentricZoneModel_[k];
-        for (uint16_t ring_idx = 0; ring_idx < num_rings_each_zone_[k]; ++ring_idx) {
-            for (uint16_t sector_idx = 0; sector_idx < num_sectors_each_zone_[k]; ++sector_idx) {
-                if (zone[ring_idx][sector_idx].points.size() > num_min_pts_) {
-                    double t_tmp0 = ros::Time::now().toSec();
-                    // 22.05.02 update
-                    // Region-wise sorting is adopted
-                    sort(zone[ring_idx][sector_idx].points.begin(), zone[ring_idx][sector_idx].end(), point_z_cmp<PointT>);
-                    extract_piecewiseground(k, zone[ring_idx][sector_idx], regionwise_ground_, regionwise_nonground_);
-                    double t_tmp1 = ros::Time::now().toSec();
-                    t_total_ground += t_tmp1 - t_tmp0;
+    int num_patches = patch_indices_.size();
 
-                    // Status of each patch
-                    // used in checking uprightness, elevation, and flatness, respectively
-                    const double ground_z_vec       = abs(normal_(2, 0));
-                    const double ground_z_elevation = pc_mean_(2, 0);
-                    const double surface_variable   =
-                                         singular_values_.minCoeff() /
-                                         (singular_values_(0) + singular_values_(1) + singular_values_(2));
+    tbb::parallel_for(0, num_patches, [&](int i) {
+        const auto &patch_idx = patch_indices_[i];
+        const int zone_idx = patch_idx.zone_idx_;
+        const int ring_idx = patch_idx.ring_idx_;
+        const int sector_idx = patch_idx.sector_idx_;
+        const int concentric_idx = patch_idx.concentric_idx_;
 
-                    if (visualize_) {
-                        auto polygons = set_polygons(k, ring_idx, sector_idx, 3);
-                        polygons.header = poly_list_.header;
-                        poly_list_.polygons.push_back(polygons);
-                        set_ground_likelihood_estimation_status(k, ring_idx, concentric_idx, ground_z_vec,
-                                                                ground_z_elevation, surface_variable);
-                    }
+        auto &patch = ConcentricZoneModel_[zone_idx][ring_idx][sector_idx];
 
-                    double t_tmp2 = ros::Time::now().toSec();
-                    if (ground_z_vec < uprightness_thr_) {
-                        // All points are rejected
-                        cloud_nonground += regionwise_ground_;
-                        cloud_nonground += regionwise_nonground_;
-                    } else { // satisfy uprightness
-                        if (concentric_idx < num_rings_of_interest_) {
-                            if (ground_z_elevation > -sensor_height_ + elevation_thr_[ring_idx + 2 * k]) {
-                                if (flatness_thr_[ring_idx + 2 * k] > surface_variable) {
-                                    if (verbose_) {
-                                        std::cout << "\033[1;36m[Flatness] Recovery operated. Check "
-                                                  << ring_idx + 2 * k
-                                                  << "th param. flatness_thr_: " << flatness_thr_[ring_idx + 2 * k]
-                                                  << " > "
-                                                  << surface_variable << "\033[0m" << std::endl;
-                                        revert_pc += regionwise_ground_;
-                                    }
-                                    cloud_out += regionwise_ground_;
-                                    cloud_nonground += regionwise_nonground_;
-                                } else {
-                                    if (verbose_) {
-                                        std::cout << "\033[1;34m[Elevation] Rejection operated. Check "
-                                                  << ring_idx + 2 * k
-                                                  << "th param. of elevation_thr_: " << -sensor_height_ + elevation_thr_[ring_idx + 2 * k]
-                                                  << " < "
-                                                  << ground_z_elevation << "\033[0m" << std::endl;
-                                        reject_pc += regionwise_ground_;
-                                    }
-                                    cloud_nonground += regionwise_ground_;
-                                    cloud_nonground += regionwise_nonground_;
-                                }
-                            } else {
-                                cloud_out += regionwise_ground_;
-                                cloud_nonground += regionwise_nonground_;
-                            }
-                        } else {
-                            if (using_global_thr_ && (ground_z_elevation > global_elevation_thr_)) {
-                                cout << "\033[1;33m[Global elevation] " << ground_z_elevation << " > " << global_elevation_thr_
-                                     << "\033[0m" << endl;
-                                cloud_nonground += regionwise_ground_;
-                                cloud_nonground += regionwise_nonground_;
-                            } else {
-                                cloud_out += regionwise_ground_;
-                                cloud_nonground += regionwise_nonground_;
-                            }
-                        }
-                    }
-                    double t_tmp3 = ros::Time::now().toSec();
-                    t_total_estimate += t_tmp3 - t_tmp2;
-                }
-            }
-            ++concentric_idx;
+        auto &feat = features_[i];
+        auto &regionwise_ground = regionwise_grounds_[i];
+        auto &regionwise_nonground = regionwise_nongrounds_[i];
+        auto &status = statuses_[i];
+
+        if (patch.points.size() > num_min_pts_) {
+            double t_tmp0 = ros::Time::now().toSec();
+            // 22.05.02 update
+            // Region-wise sorting is adopted, which is much faster than global sorting!
+            sort(patch.points.begin(), patch.points.end(), point_z_cmp<PointT>);
+            extract_piecewiseground(zone_idx, patch, feat, regionwise_ground, regionwise_nonground);
+            double t_tmp1 = ros::Time::now().toSec();
+
+            const double ground_z_vec       = abs(feat.normal_(2));
+            const double ground_z_elevation = feat.mean_(2);
+            const double surface_variable   =
+                                 feat.singular_values_.minCoeff() /
+                                 (feat.singular_values_(0) + feat.singular_values_(1) + feat.singular_values_(2));
+
+            status = determine_ground_likelihood_estimation_status(concentric_idx, ground_z_vec,
+                                                                         ground_z_elevation, surface_variable);
+        } else {
+            // Why? Because it is better to reject noise points
+            // That is, these noise points sometimes lead to mis-recognition or wrong clustering
+            // Thus, in practice, just rejecting them is better than using them
+            // But note that this may degrade quantitative ground segmentation performance
+            regionwise_ground = patch;
+            regionwise_nonground.clear();
+            status = FEW_POINTS;
         }
-    }
-    end                     = ros::Time::now().toSec();
-    time_taken              = end - start;
+    });
+
+    std::for_each(indices_.begin(), indices_.end(), [&](const int &i) {
+        const auto &patch_idx     = patch_indices_[i];
+        const int  zone_idx       = patch_idx.zone_idx_;
+        const int  ring_idx       = patch_idx.ring_idx_;
+        const int  sector_idx     = patch_idx.sector_idx_;
+        const int  concentric_idx = patch_idx.concentric_idx_;
+
+        const auto &patch                = ConcentricZoneModel_[zone_idx][ring_idx][sector_idx];
+        const auto &feat                 = features_[i];
+        const auto &regionwise_ground    = regionwise_grounds_[i];
+        const auto &regionwise_nonground = regionwise_nongrounds_[i];
+        const auto status                = statuses_[i];
+
+        if (visualize_ && (status != FEW_POINTS && status != NOT_ASSIGNED)) {
+            auto polygons = set_polygons(zone_idx, ring_idx, sector_idx, 3);
+            polygons.header = poly_list_.header;
+            poly_list_.polygons.emplace_back(polygons);
+            poly_list_.likelihood.emplace_back(COLOR_MAP[status]);
+        }
+
+        double t_tmp2 = ros::Time::now().toSec();
+        if (status == FEW_POINTS) {
+            ground += regionwise_ground;
+            nonground += regionwise_nonground;
+        } else if (status == TOO_TILTED) {
+            // All points are rejected
+            nonground += regionwise_ground;
+            nonground += regionwise_nonground;
+        } else if (status == GLOBALLY_TOO_HIGH_ELEVATION) {
+            cout << "\033[1;33m[Global elevation] " << feat.mean_(2) << " > " << global_elevation_thr_
+            << "\033[0m\n";
+            nonground += regionwise_ground;
+            nonground += regionwise_nonground;
+        } else if (status == TOO_HIGH_ELEVATION) {
+            if (verbose_) {
+                std::cout << "\033[1;34m[Elevation] Rejection operated. Check "
+                << concentric_idx
+                << "th param. of elevation_thr_: " << -sensor_height_ + elevation_thr_[concentric_idx]
+                << " < " << feat.mean_(2) << "\033[0m\n";
+                rejected_points_by_elevation_ += regionwise_ground;
+            }
+            nonground += regionwise_ground;
+            nonground += regionwise_nonground;
+        } else if (status == FLAT_ENOUGH) {
+            if (verbose_) {
+                std::cout << "\033[1;36m[Flatness] Recovery operated. Check "
+                          << concentric_idx
+                          << "th param. flatness_thr_: " << flatness_thr_[concentric_idx]
+                          << " > "
+                          << feat.singular_values_.minCoeff() /
+                                 (feat.singular_values_(0) + feat.singular_values_(1) + feat.singular_values_(2)) << "\033[0m\n";
+                reverted_points_by_flatness_ += regionwise_ground;
+            }
+            ground += regionwise_ground;
+            nonground += regionwise_nonground;
+        } else if (status == UPRIGHT_ENOUGH) {
+            ground += regionwise_ground;
+            nonground += regionwise_nonground;
+        } else {
+            std::invalid_argument("Something wrong in `determine_ground_likelihood_estimation_status()` fn!");
+        }
+        double t_tmp3 = ros::Time::now().toSec();
+        t_total_estimate += t_tmp3 - t_tmp2;
+    });
+
+    end         = ros::Time::now().toSec();
+    time_taken  = end - start;
 //    ofstream time_txt("/home/shapelim/patchwork_time_anal.txt", std::ios::app);
 //    time_txt<<t0 - start<<" "<<t1 - t0 <<" "<<t2-t1<<" "<<t_total_ground<< " "<<t_total_estimate<<"\n";
 //    time_txt.close();
 
     if (verbose_) {
         sensor_msgs::PointCloud2 cloud_ROS;
-        pcl::toROSMsg(revert_pc, cloud_ROS);
+        pcl::toROSMsg(reverted_points_by_flatness_, cloud_ROS);
         cloud_ROS.header.stamp    = ros::Time::now();
         cloud_ROS.header.frame_id = "/map";
-        revert_pc_pub.publish(cloud_ROS);
-        pcl::toROSMsg(reject_pc, cloud_ROS);
+        RevertedCloudPub.publish(cloud_ROS);
+        pcl::toROSMsg(rejected_points_by_elevation_, cloud_ROS);
         cloud_ROS.header.stamp    = ros::Time::now();
         cloud_ROS.header.frame_id = "/map";
-        reject_pc_pub.publish(cloud_ROS);
+        RejectedCloudPub.publish(cloud_ROS);
     }
-    PlaneViz.publish(poly_list_);
+    PlanePub.publish(poly_list_);
 }
-
-template<typename PointT>
-inline
-double PatchWork<PointT>::calc_principal_variance(const Eigen::Matrix3f &cov, const Eigen::Vector4f &centroid) {
-    double angle       = atan2(centroid(1, 0), centroid(0, 0)); // y, x
-    double c           = cos(angle);
-    double s           = sin(angle);
-    double var_x_prime = c * c * cov(0, 0) + s * s * cov(1, 1) + 2 * c * s * cov(0, 1);
-    double var_y_prime = s * s * cov(0, 0) + c * c * cov(1, 1) - 2 * c * s * cov(0, 1);
-    return max(var_x_prime, var_y_prime);
-}
-
 
 template<typename PointT>
 inline
@@ -729,96 +769,48 @@ template<typename PointT>
 inline
 void PatchWork<PointT>::extract_piecewiseground(
         const int zone_idx, const pcl::PointCloud<PointT> &src,
-        pcl::PointCloud<PointT> &dst,
-        pcl::PointCloud<PointT> &non_ground_dst,
+        PCAFeature &feat,
+        pcl::PointCloud<PointT> &regionwise_ground,
+        pcl::PointCloud<PointT> &regionwise_nonground,
         bool is_h_available) {
     // 0. Initialization
-    if (!ground_pc_.empty()) ground_pc_.clear();
-    if (!dst.empty()) dst.clear();
-    if (!non_ground_dst.empty()) non_ground_dst.clear();
+    int N = src.points.size();
+    pcl::PointCloud<PointT> ground_tmp;
+    ground_tmp.reserve(NUM_HEURISTIC_MAX_PTS_IN_PATCH);
+    if (!regionwise_ground.empty()) regionwise_ground.clear();
+    if (!regionwise_nonground.empty()) regionwise_nonground.clear();
 
     // 1. set seeds!
-    extract_initial_seeds_(zone_idx, src, ground_pc_, is_h_available);
+    extract_initial_seeds_(zone_idx, src, ground_tmp, is_h_available);
 
     // 2. Extract ground
     for (int i = 0; i < num_iter_; i++) {
-        estimate_plane_(ground_pc_);
-        ground_pc_.clear();
+        estimate_plane_(ground_tmp, feat);
+        ground_tmp.clear();
 
         //pointcloud to matrix
-        Eigen::MatrixXf points(src.points.size(), 3);
+        Eigen::MatrixXf points(N, 3);
         int             j      = 0;
         for (auto       &p:src.points) {
-            points.row(j++) << p.x, p.y, p.z;
+            points.row(j++) = p.getVector3fMap();
         }
         // ground plane model
-        Eigen::VectorXf result = points * normal_;
+        Eigen::VectorXf result = points * feat.normal_;
         // threshold filter
-        for (int        r      = 0; r < result.rows(); r++) {
+        for (int        r      = 0; r < N; r++) {
             if (i < num_iter_ - 1) {
-                if (result[r] < th_dist_d_) {
-                    ground_pc_.points.push_back(src[r]);
+                if (result[r] < feat.th_dist_d_) {
+                    ground_tmp.points.emplace_back(src[r]);
                 }
             } else { // Final stage
-                if (result[r] < th_dist_d_) {
-                    dst.points.push_back(src[r]);
+                if (result[r] < feat.th_dist_d_) {
+                    regionwise_ground.points.emplace_back(src[r]);
                 } else {
-                    if (i == num_iter_ - 1) {
-                        non_ground_dst.push_back(src[r]);
-                    }
+                    regionwise_nonground.points.emplace_back(src[r]);
                 }
             }
         }
     }
-}
-
-
-template<typename PointT>
-inline
-geometry_msgs::PolygonStamped PatchWork<PointT>::set_polygons(int r_idx, int theta_idx, int num_split) {
-    geometry_msgs::PolygonStamped polygons;
-    // Set point of polygon. Start from RL and ccw
-    geometry_msgs::Point32        point;
-
-    // RL
-    double r_len = r_idx * ring_size + min_range_;
-    double angle = theta_idx * sector_size;
-
-    point.x = r_len * cos(angle);
-    point.y = r_len * sin(angle);
-    point.z = MARKER_Z_VALUE;
-    polygons.polygon.points.push_back(point);
-    // RU
-    r_len = r_len + ring_size;
-    point.x = r_len * cos(angle);
-    point.y = r_len * sin(angle);
-    point.z = MARKER_Z_VALUE;
-    polygons.polygon.points.push_back(point);
-
-    // RU -> LU
-    for (int idx = 1; idx <= num_split; ++idx) {
-        angle = angle + sector_size / num_split;
-        point.x = r_len * cos(angle);
-        point.y = r_len * sin(angle);
-        point.z = MARKER_Z_VALUE;
-        polygons.polygon.points.push_back(point);
-    }
-
-    r_len = r_len - ring_size;
-    point.x = r_len * cos(angle);
-    point.y = r_len * sin(angle);
-    point.z = MARKER_Z_VALUE;
-    polygons.polygon.points.push_back(point);
-
-    for (int idx = 1; idx < num_split; ++idx) {
-        angle = angle - sector_size / num_split;
-        point.x = r_len * cos(angle);
-        point.y = r_len * sin(angle);
-        point.z = MARKER_Z_VALUE;
-        polygons.polygon.points.push_back(point);
-    }
-
-    return polygons;
 }
 
 template<typename PointT>
@@ -866,41 +858,38 @@ geometry_msgs::PolygonStamped PatchWork<PointT>::set_polygons(int zone_idx, int 
         point.z = MARKER_Z_VALUE;
         polygons.polygon.points.push_back(point);
     }
-
     return polygons;
 }
 
 template<typename PointT>
 inline
-void PatchWork<PointT>::set_ground_likelihood_estimation_status(
-        const int k, const int ring_idx,
-        const int concentrix_idx,
+int PatchWork<PointT>::determine_ground_likelihood_estimation_status(
+        const int concentric_idx,
         const double z_vec,
         const double z_elevation,
         const double surface_variable) {
-    if (z_vec > uprightness_thr_) { //orthogonal
-        if (concentrix_idx < num_rings_of_interest_) {
-            if (z_elevation > -sensor_height_ + elevation_thr_[ring_idx + 2 * k]) {
-                if (flatness_thr_[ring_idx + 2 * k] > surface_variable) {
-                    poly_list_.likelihood.push_back(FLAT_ENOUGH);
+    if (z_vec < uprightness_thr_) {
+        return TOO_TILTED;
+    } else { //orthogonal
+        if (concentric_idx < num_rings_of_interest_) {
+            if (z_elevation > -sensor_height_ + elevation_thr_[concentric_idx]) {
+                if (flatness_thr_[concentric_idx] > surface_variable) {
+                    return FLAT_ENOUGH;
                 } else {
-                    poly_list_.likelihood.push_back(TOO_HIGH_ELEVATION);
+                    return TOO_HIGH_ELEVATION;
                 }
             } else {
-                poly_list_.likelihood.push_back(UPRIGHT_ENOUGH);
+                return UPRIGHT_ENOUGH;
             }
         } else {
             if (using_global_thr_ && (z_elevation > global_elevation_thr_)) {
-                poly_list_.likelihood.push_back(GLOBALLLY_TOO_HIGH_ELEVATION_THR);
+                return GLOBALLY_TOO_HIGH_ELEVATION;
             } else {
-                poly_list_.likelihood.push_back(UPRIGHT_ENOUGH);
+                return UPRIGHT_ENOUGH;
             }
         }
-    } else { // tilted
-        poly_list_.likelihood.push_back(TOO_TILTED);
     }
 }
-
 
 template<typename PointT>
 inline
@@ -927,9 +916,7 @@ void PatchWork<PointT>::check_input_parameters_are_correct() {
     if (elevation_thr_.size() != flatness_thr_.size()) {
         throw invalid_argument("Some parameters are wrong! Check the elevation/flatness_thresholds");
     }
-
 }
-
 
 template<typename PointT>
 inline
@@ -947,8 +934,6 @@ void PatchWork<PointT>::cout_params() {
     cout << (boost::format("flatness_thr_: %0.4f, %0.4f, %0.4f, %0.4f ") % flatness_thr_[0] % flatness_thr_[1] %
              flatness_thr_[2] %
              flatness_thr_[3]).str() << endl;
-
-
 }
 
 #endif

@@ -21,8 +21,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-include(${CMAKE_CURRENT_LIST_DIR}/pmc/pmc.cmake)
-
 # tbb needs to be statically linked, so, also do it always :)
 if(USE_SYSTEM_TBB)
   find_package(TBB QUIET NO_MODULE)

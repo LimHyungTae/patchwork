@@ -27,6 +27,7 @@ ros::Publisher EstGroundFilteredPublisher;
 
 boost::shared_ptr<PatchWork<PointType> > PatchworkGroundSeg;
 
+std::string abs_save_dir;
 std::string output_filename;
 std::string acc_filename;
 std::string pcd_savepath;
@@ -118,9 +119,11 @@ int main(int argc, char**argv) {
 
     signal(SIGINT, signal_callback_handler);
 
-    string abs_save_dir = data_path + "/patchwork";
-    std::cout << "\033[1;34m" << abs_save_dir << "\033[0m" << std::endl;
-    std::experimental::filesystem::create_directory(abs_save_dir);
+    if (save_flag) {
+        abs_save_dir = data_path + "/patchwork";
+        std::cout << "\033[1;34m" << abs_save_dir << "\033[0m" << std::endl;
+        std::experimental::filesystem::create_directory(abs_save_dir);
+    }
 
     PatchworkGroundSeg.reset(new PatchWork<PointType>(&nh));
     cout << "Target data: " << data_path << endl;
@@ -153,11 +156,11 @@ int main(int argc, char**argv) {
 // -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 //        If you want to save precision/recall in a text file, revise this part
 // -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
-//        string output_filename = "/home/shapelim/data.csv";
-//        ofstream ground_output(output_filename, ios::app);
-//        ground_output << n << "," << time_taken << "," << precision << "," << recall << "," << precision_naive << "," << recall_naive;
-//        ground_output << std::endl;
-//        ground_output.close();
+        output_filename = "/home/shapelim/patchwork.txt";
+        ofstream ground_output(output_filename, ios::app);
+        ground_output << n << "," << time_taken << "," << precision << "," << recall << "," << precision_naive << "," << recall_naive;
+        ground_output << std::endl;
+        ground_output.close();
 // -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 
         // Publish msg
@@ -207,8 +210,6 @@ int main(int argc, char**argv) {
         pub_score("p", precision);
         pub_score("r", recall);
     }
-
-    ros::spin();
 
     return 0;
 }
