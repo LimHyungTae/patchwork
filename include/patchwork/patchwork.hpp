@@ -144,7 +144,7 @@ public:
         num_rings_of_interest_ = elevation_thr_.size();
 
         node_handle_.param("/patchwork/visualize", visualize_, true);
-        poly_list_.header.frame_id = "/map";
+        poly_list_.header.frame_id = "map";
         poly_list_.polygons.reserve(130000);
 
         reverted_points_by_flatness_.reserve(NUM_HEURISTIC_MAX_PTS_IN_PATCH);
@@ -698,11 +698,11 @@ void PatchWork<PointT>::estimate_ground(
         sensor_msgs::PointCloud2 cloud_ROS;
         pcl::toROSMsg(reverted_points_by_flatness_, cloud_ROS);
         cloud_ROS.header.stamp    = ros::Time::now();
-        cloud_ROS.header.frame_id = "/map";
+        cloud_ROS.header.frame_id = "map";
         RevertedCloudPub.publish(cloud_ROS);
         pcl::toROSMsg(rejected_points_by_elevation_, cloud_ROS);
         cloud_ROS.header.stamp    = ros::Time::now();
-        cloud_ROS.header.frame_id = "/map";
+        cloud_ROS.header.frame_id = "map";
         RejectedCloudPub.publish(cloud_ROS);
     }
     PlanePub.publish(poly_list_);

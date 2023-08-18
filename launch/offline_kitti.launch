@@ -8,7 +8,7 @@
 <rosparam param="/end_frame">10000</rosparam>
 <rosparam param="/data_path">"/media/shapelim/UX960NVMe11/kitti_semantic/dataset/sequences/04"</rosparam>
 </node>
-<!--<node name="rviz" pkg="rviz" type="rviz" args="-d $(find patchwork)/rviz/patchwork_viz.rviz"/>-->
+<node name="rviz" pkg="rviz" type="rviz" args="-d $(find patchwork)/rviz/patchwork_viz.rviz"/>
 
 <rosparam command="load" file="$(find patchwork)/config/params.yaml" />
 </launch>
