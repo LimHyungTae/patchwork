@@ -19,6 +19,7 @@ ros::Publisher CloudPublisher;
 ros::Publisher TPPublisher;
 ros::Publisher FPPublisher;
 ros::Publisher FNPublisher;
+ros::Publisher TNPublisher;
 ros::Publisher PrecisionPublisher;
 ros::Publisher RecallPublisher;
 ros::Publisher EstGroundPublisher;
@@ -108,6 +109,7 @@ int main(int argc, char**argv) {
     TPPublisher        = nh.advertise<sensor_msgs::PointCloud2>("/benchmark/TP", 100, true);
     FPPublisher        = nh.advertise<sensor_msgs::PointCloud2>("/benchmark/FP", 100, true);
     FNPublisher        = nh.advertise<sensor_msgs::PointCloud2>("/benchmark/FN", 100, true);
+    TNPublisher        = nh.advertise<sensor_msgs::PointCloud2>("/benchmark/TN", 100, true);
     PrecisionPublisher = nh.advertise<visualization_msgs::Marker>("/precision", 1, true);
     RecallPublisher    = nh.advertise<visualization_msgs::Marker>("/recall", 1, true);
 
@@ -197,6 +199,7 @@ int main(int argc, char**argv) {
         TPPublisher.publish(cloud2msg(TP));
         FPPublisher.publish(cloud2msg(FP));
         FNPublisher.publish(cloud2msg(FN));
+        TNPublisher.publish(cloud2msg(TN));
         EstGroundPublisher.publish(cloud2msg(pc_ground));
         if (use_sor_before_save) {
             EstGroundFilteredPublisher.publish(cloud2msg(*filtered));

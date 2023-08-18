@@ -4,44 +4,9 @@ Official page of *"Patchwork: Concentric Zone-based Region-wise Ground Segmentat
 
 #### [[Video](https://youtu.be/rclqeDi4gow)] [[Preprint Paper](https://urserver.kaist.ac.kr/publicdata/patchwork/RA_L_21_patchwork_final_submission.pdf)] [[Project Wiki](https://github.com/LimHyungTae/patchwork/wiki)]
 
-Patchwork                  |  Concept of our method (CZM & GLE)
-:-------------------------:|:-------------------------:
-![](img/patchwork_concept_resized.jpg) |  ![](img/patchwork.gif)
 
-It's an overall updated version of **R-GPF of ERASOR** [**[Code](https://github.com/LimHyungTae/ERASOR)**] [**[Paper](https://arxiv.org/abs/2103.04316)**]. 
 
-## NEWS (22.12.24)
-- Merry christmas eve XD! `include/label_generator` is added to make the `.label` file, following the SemanticKITTI format.
-- The `.label` files can be directly used in [3DUIS benchmark](https://github.com/PRBonn/3DUIS)
-- Thank [Lucas Nunes](https://scholar.google.com/citations?user=PCxhsf4AAAAJ&hl=en&oi=ao) and [Xieyuanli Chen](https://scholar.google.com/citations?user=DvrngV4AAAAJ&hl=en&oi=sra) for providing code snippets to save a `.label` file.
-
-## NEWS (22.07.25)
-- Pybinding + more advanced version is now available on [Patchwork++](https://github.com/url-kaist/patchwork-plusplus) as a preprocessing step for deep learning users (i.e., python users can also use our robust ground segmentation)!
-
-## NEWS (22.07.13)
-- For increasing convenience of use, the examples and codes are extensively revised by reflecting [issue #12](https://github.com/LimHyungTae/patchwork/issues/12). 
-
-## NEWS (22.05.22)
-- The meaning of `elevation_thresholds` is changed to increase the usability. The meaning is explained in [wiki](https://github.com/LimHyungTae/patchwork/wiki/4.-IMPORTANT:-Setting-Parameters-of-Patchwork-in-Your-Own-Env.).
-- A novel height estimator, called *All-Terrain Automatic heighT estimator (ATAT)* is added within the patchwork code, which auto-calibrates the sensor height using the ground points in the vicinity of the vehicle/mobile robot. 
-  - Please refer to the function `consensus_set_based_height_estimation()`.
-
-## NEWS (21.12.27)
-- `pub_for_legoloam` node for the pointcloud in kitti bagfile is added.
-	- `ground_estimate.msg` is added
-- Bug in xy2theta function is fixed.
-
-- How to run
-```bash
-roslaunch patchwork pub_for_legoloam.launch
-rosbag play {YOUR_FILE_PATH}/KITTI_BAG/kitti_sequence_00.bag --clock /kitti/velo/pointcloud:=/velodyne_points
-```
-- **This README about this LiDAR odometry is still incomplete. It will be updated soon!**
-----
-
-# Demo
-
-## KITTI 00 
+## KITTI 00
 
 ![](img/demo_kitti00_v2.gif)
 
@@ -49,7 +14,14 @@ rosbag play {YOUR_FILE_PATH}/KITTI_BAG/kitti_sequence_00.bag --clock /kitti/velo
 
 ![](img/demo_terrain_v3.gif)
 
-----
+Patchwork                  |  Concept of our method (CZM & GLE)
+:-------------------------:|:-------------------------:
+![](img/patchwork_concept_resized.jpg) |  ![](img/patchwork.gif)
+
+It's an overall updated version of **R-GPF of ERASOR** [**[Code](https://github.com/LimHyungTae/ERASOR)**] [**[Paper](https://arxiv.org/abs/2103.04316)**]. 
+
+---
+
 
 
 ### Characteristics
@@ -58,10 +30,11 @@ rosbag play {YOUR_FILE_PATH}/KITTI_BAG/kitti_sequence_00.bag --clock /kitti/velo
 
 * Robust ground consistency
 
-As shown in the demo videos and below figure, our method shows the most promising robust performance compared with other state-of-the-art methods, especially, our method focuses on the little perturbation of precision/recall as shown in [this figure](img/seq_00_pr_zoom.pdf).
+As shown in the demo videos, our method shows the most promising robust performance compared with other state-of-the-art methods, especially, our method focuses on the little perturbation of precision/recall as shown in [this figure](img/seq_00_pr_zoom.pdf).
 
 Please kindly note that the concept of *traversable area* and *ground* is quite different! Please refer to our paper.
 
+---
 
 ## Contents
 0. [Test Env.](#Test-Env.)
@@ -234,16 +207,39 @@ All explanations of parameters and other experimental results will be uploaded i
 
 If you have any questions, please let me know:
 
-- Hyungtae Lim {[shapelim@kaist.ac.kr]()}
+- Hyungtae Lim (`shapelim at kaist dot ac dot kr`)
 
 
-### TODO List
+--- 
 
-- [x] Add ROS support
-- [x] Add preprint paper
-- [x] Add demo videos
-- [x] Add own dataset examples
-- [x] Update wiki
+## Updates 
 
------
+#### NEWS (22.12.24)
+- Merry christmas eve XD! `include/label_generator` is added to make the `.label` file, following the SemanticKITTI format.
+- The `.label` files can be directly used in [3DUIS benchmark](https://github.com/PRBonn/3DUIS)
+- Thank [Lucas Nunes](https://scholar.google.com/citations?user=PCxhsf4AAAAJ&hl=en&oi=ao) and [Xieyuanli Chen](https://scholar.google.com/citations?user=DvrngV4AAAAJ&hl=en&oi=sra) for providing code snippets to save a `.label` file.
+
+#### NEWS (22.07.25)
+- Pybinding + more advanced version is now available on [Patchwork++](https://github.com/url-kaist/patchwork-plusplus) as a preprocessing step for deep learning users (i.e., python users can also use our robust ground segmentation)!
+
+#### NEWS (22.07.13)
+- For increasing convenience of use, the examples and codes are extensively revised by reflecting [issue #12](https://github.com/LimHyungTae/patchwork/issues/12). 
+
+#### NEWS (22.05.22)
+- The meaning of `elevation_thresholds` is changed to increase the usability. The meaning is explained in [wiki](https://github.com/LimHyungTae/patchwork/wiki/4.-IMPORTANT:-Setting-Parameters-of-Patchwork-in-Your-Own-Env.).
+- A novel height estimator, called *All-Terrain Automatic heighT estimator (ATAT)* is added within the patchwork code, which auto-calibrates the sensor height using the ground points in the vicinity of the vehicle/mobile robot. 
+  - Please refer to the function `consensus_set_based_height_estimation()`.
+
+#### NEWS (21.12.27)
+- `pub_for_legoloam` node for the pointcloud in kitti bagfile is added.
+	- `ground_estimate.msg` is added
+- Bug in xy2theta function is fixed.
+
+- How to run
+```bash
+roslaunch patchwork pub_for_legoloam.launch
+rosbag play {YOUR_FILE_PATH}/KITTI_BAG/kitti_sequence_00.bag --clock /kitti/velo/pointcloud:=/velodyne_points
+```
+- **This README about this LiDAR odometry is still incomplete. It will be updated soon!**
+
 
