@@ -131,14 +131,12 @@ int main(int argc, char**argv) {
 
     int      N = loader.size();
     for (int n = max(0, start_frame); n < min(N, end_frame); ++n) {
-        cout << n << "th node come" << endl;
         pcl::PointCloud<PointType> pc_curr;
         loader.get_cloud(n, pc_curr);
         pcl::PointCloud<PointType> pc_ground;
         pcl::PointCloud<PointType> pc_non_ground;
 
         static double time_taken;
-        cout << "Operating patchwork..." << endl;
         PatchworkGroundSeg->estimate_ground(pc_curr, pc_ground, pc_non_ground, time_taken);
 
         // Estimation
@@ -146,12 +144,10 @@ int main(int argc, char**argv) {
         calculate_precision_recall(pc_curr, pc_ground, precision, recall);
         calculate_precision_recall(pc_curr, pc_ground, precision_naive, recall_naive, false);
 
-        cout << "\033[1;32m" << n << "th, " << " takes : " << time_taken << " | " << pc_curr.size() << " -> "
-             << pc_ground.size()
-             << "\033[0m" << endl;
+        cout << n << "th: \033[1;32m" << " takes " << time_taken << " sec, " << pc_curr.size() << " -> "
+             << pc_ground.size() << "\033[0m\n";
 
-        cout << "\033[1;32m P: " << precision << " | R: " << recall << "\033[0m" << endl;
-
+        cout << "\033[1;32mP: " << precision << " | R: " << recall << "\033[0m\n";
 
 // -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 //        If you want to save precision/recall in a text file, revise this part
