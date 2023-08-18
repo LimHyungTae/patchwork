@@ -27,6 +27,7 @@ ros::Publisher EstGroundFilteredPublisher;
 
 boost::shared_ptr<PatchWork<PointType> > PatchworkGroundSeg;
 
+std::string abs_save_dir;
 std::string output_filename;
 std::string acc_filename;
 std::string pcd_savepath;
@@ -118,9 +119,11 @@ int main(int argc, char**argv) {
 
     signal(SIGINT, signal_callback_handler);
 
-    string abs_save_dir = data_path + "/patchwork";
-    std::cout << "\033[1;34m" << abs_save_dir << "\033[0m" << std::endl;
-    std::experimental::filesystem::create_directory(abs_save_dir);
+    if (save_flag) {
+        abs_save_dir = data_path + "/patchwork";
+        std::cout << "\033[1;34m" << abs_save_dir << "\033[0m" << std::endl;
+        std::experimental::filesystem::create_directory(abs_save_dir);
+    }
 
     PatchworkGroundSeg.reset(new PatchWork<PointType>(&nh));
     cout << "Target data: " << data_path << endl;
@@ -128,14 +131,12 @@ int main(int argc, char**argv) {
 
     int      N = loader.size();
     for (int n = max(0, start_frame); n < min(N, end_frame); ++n) {
-        cout << n << "th node come" << endl;
         pcl::PointCloud<PointType> pc_curr;
         loader.get_cloud(n, pc_curr);
         pcl::PointCloud<PointType> pc_ground;
         pcl::PointCloud<PointType> pc_non_ground;
 
         static double time_taken;
-        cout << "Operating patchwork..." << endl;
         PatchworkGroundSeg->estimate_ground(pc_curr, pc_ground, pc_non_ground, time_taken);
 
         // Estimation
@@ -143,21 +144,19 @@ int main(int argc, char**argv) {
         calculate_precision_recall(pc_curr, pc_ground, precision, recall);
         calculate_precision_recall(pc_curr, pc_ground, precision_naive, recall_naive, false);
 
-        cout << "\033[1;32m" << n << "th, " << " takes : " << time_taken << " | " << pc_curr.size() << " -> "
-             << pc_ground.size()
-             << "\033[0m" << endl;
+        cout << n << "th: \033[1;32m" << " takes " << time_taken << " sec, " << pc_curr.size() << " -> "
+             << pc_ground.size() << "\033[0m\n";
 
-        cout << "\033[1;32m P: " << precision << " | R: " << recall << "\033[0m" << endl;
-
+        cout << "\033[1;32mP: " << precision << " | R: " << recall << "\033[0m\n";
 
 // -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 //        If you want to save precision/recall in a text file, revise this part
 // -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
-//        string output_filename = "/home/shapelim/data.csv";
-//        ofstream ground_output(output_filename, ios::app);
-//        ground_output << n << "," << time_taken << "," << precision << "," << recall << "," << precision_naive << "," << recall_naive;
-//        ground_output << std::endl;
-//        ground_output.close();
+        output_filename = "/home/shapelim/patchwork.txt";
+        ofstream ground_output(output_filename, ios::app);
+        ground_output << n << "," << time_taken << "," << precision << "," << recall << "," << precision_naive << "," << recall_naive;
+        ground_output << std::endl;
+        ground_output.close();
 // -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 
         // Publish msg
@@ -207,8 +206,6 @@ int main(int argc, char**argv) {
         pub_score("p", precision);
         pub_score("r", recall);
     }
-
-    ros::spin();
 
     return 0;
 }

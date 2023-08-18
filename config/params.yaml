@@ -12,7 +12,7 @@ extrinsic_rot: [1, 0, 0,
                0, 0, 1]
 patchwork:
     mode: "czm" 
-    verbose: true # To check effect of uprightness/elevation/flatness
+    verbose: false  # To check effect of uprightness/elevation/flatness
     visualize: true # Ground Likelihood Estimation is visualized
     # Ground Plane Fitting parameters
     num_iter: 3
