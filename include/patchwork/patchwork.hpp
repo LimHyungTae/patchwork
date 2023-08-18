@@ -355,7 +355,7 @@ void PatchWork<PointT>::estimate_plane_(const pcl::PointCloud<PointT> &ground, P
 
     // use the least singular vector as normal
     feat.normal_ = (svd.matrixU().col(2));
-    if (feat.normal_(2, 0) < 0) { // z 방향 vector는 위를 무조건 향하게 해야 함
+    if (feat.normal_(2) < 0) { // z-direction of the normal vector should be positive
         feat.normal_ = -feat.normal_;
     }
     // mean ground seeds value
