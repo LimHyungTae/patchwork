@@ -11,6 +11,9 @@
 #include <pcl/common/centroid.h>
 #include <pcl/io/pcd_io.h>
 
+#include <tbb/tbb.h>
+#include <tbb/parallel_for.h>
+
 #define MARKER_Z_VALUE -2.2
 #define UPRIGHT_ENOUGH 0.55 // cyan
 #define FLAT_ENOUGH 0.2 // green
@@ -535,9 +538,14 @@ void PatchWork<PointT>::estimate_ground(
     for (int k = 0; k < num_zones_; ++k) {
         flush_patches_in_zone(ConcentricZoneModel_[k], num_sectors_each_zone_[k], num_rings_each_zone_[k]);
     }
-    pc2czm(laserCloudIn, ConcentricZoneModel_);
 
+    double t11 = ros::Time::now().toSec();
+    pc2czm(laserCloudIn, ConcentricZoneModel_);
     t2 = ros::Time::now().toSec();
+    string output_filename = "/home/shapelim/pc2czm.txt";
+    ofstream ground_output(output_filename, ios::app);
+    ground_output << t2-t11 << "\n";
+    ground_output.close();
 
     cloud_out.clear();
     cloud_nonground.clear();
@@ -546,7 +554,7 @@ void PatchWork<PointT>::estimate_ground(
 
     int      concentric_idx = 0;
     for (int k              = 0; k < num_zones_; ++k) {
-        auto          zone     = ConcentricZoneModel_[k];
+        auto          &zone    = ConcentricZoneModel_[k];
         for (uint16_t ring_idx = 0; ring_idx < num_rings_each_zone_[k]; ++ring_idx) {
             for (uint16_t sector_idx = 0; sector_idx < num_sectors_each_zone_[k]; ++sector_idx) {
                 if (zone[ring_idx][sector_idx].points.size() > num_min_pts_) {
@@ -684,32 +692,36 @@ template<typename PointT>
 inline
 void PatchWork<PointT>::pc2czm(const pcl::PointCloud<PointT> &src, std::vector<Zone> &czm) {
 
-    for (auto const &pt : src.points) {
+    std::for_each(src.points.begin(), src.points.end(), [&](const auto &pt) {
         int    ring_idx, sector_idx;
         double r = xy2radius(pt.x, pt.y);
         if ((r <= max_range_) && (r > min_range_)) {
             double theta = xy2theta(pt.x, pt.y);
 
             if (r < min_range_z2_) { // In First rings
-                ring_idx   = min(static_cast<int>(((r - min_range_) / ring_sizes_[0])), num_rings_each_zone_[0] - 1);
+                ring_idx =
+                    min(static_cast<int>(((r - min_range_) / ring_sizes_[0])), num_rings_each_zone_[0] - 1);
                 sector_idx = min(static_cast<int>((theta / sector_sizes_[0])), num_sectors_each_zone_[0] - 1);
                 czm[0][ring_idx][sector_idx].points.emplace_back(pt);
             } else if (r < min_range_z3_) {
-                ring_idx   = min(static_cast<int>(((r - min_range_z2_) / ring_sizes_[1])), num_rings_each_zone_[1] - 1);
+                ring_idx =
+                    min(static_cast<int>(((r - min_range_z2_) / ring_sizes_[1])), num_rings_each_zone_[1] - 1);
                 sector_idx = min(static_cast<int>((theta / sector_sizes_[1])), num_sectors_each_zone_[1] - 1);
                 czm[1][ring_idx][sector_idx].points.emplace_back(pt);
             } else if (r < min_range_z4_) {
-                ring_idx   = min(static_cast<int>(((r - min_range_z3_) / ring_sizes_[2])), num_rings_each_zone_[2] - 1);
+                ring_idx =
+                    min(static_cast<int>(((r - min_range_z3_) / ring_sizes_[2])), num_rings_each_zone_[2] - 1);
                 sector_idx = min(static_cast<int>((theta / sector_sizes_[2])), num_sectors_each_zone_[2] - 1);
                 czm[2][ring_idx][sector_idx].points.emplace_back(pt);
             } else { // Far!
-                ring_idx   = min(static_cast<int>(((r - min_range_z4_) / ring_sizes_[3])), num_rings_each_zone_[3] - 1);
+                ring_idx =
+                    min(static_cast<int>(((r - min_range_z4_) / ring_sizes_[3])), num_rings_each_zone_[3] - 1);
                 sector_idx = min(static_cast<int>((theta / sector_sizes_[3])), num_sectors_each_zone_[3] - 1);
                 czm[3][ring_idx][sector_idx].points.emplace_back(pt);
             }
         }
-
-    }
+//    }
+    });
 }
 
 // For adaptive
