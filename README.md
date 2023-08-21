@@ -4,8 +4,10 @@ Official page of *"Patchwork: Concentric Zone-based Region-wise Ground Segmentat
 
 #### [[Video](https://youtu.be/rclqeDi4gow)] [[Preprint Paper](https://urserver.kaist.ac.kr/publicdata/patchwork/RA_L_21_patchwork_final_submission.pdf)] [[Project Wiki](https://github.com/LimHyungTae/patchwork/wiki)]
 
+**IMPORTANT**: (Aug. 18th, 2024) I employ TBB, so its FPS is increased from **50 Hz** to **100 Hz**! 
+If you want to use the paper version of Patchwork for SOTA comparison purpose, Please use this [ground seg. benchmark code](https://github.com/url-kaist/Ground-Segmentation-Benchmark).
 
-
+---
 ## KITTI 00
 
 ![](img/demo_kitti00_v2.gif)
