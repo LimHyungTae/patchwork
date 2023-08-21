@@ -57,6 +57,11 @@ The code is tested successfully at
 - 2. Thereafter, [jsk-visualization](https://github.com/jsk-ros-pkg/jsk_visualization) is required to visualize Ground Likelihood Estimation status.
 
 ```bash
+(if you use ubuntu 20.04)
+sudo apt-get install ros-noetic-jsk-recognition
+sudo apt-get install ros-noetic-jsk-common-msgs
+sudo apt-get install ros-noetic-jsk-rviz-plugins
+(if you use ubuntu 18.04)
 sudo apt-get install ros-melodic-jsk-recognition
 sudo apt-get install ros-melodic-jsk-common-msgs
 sudo apt-get install ros-melodic-jsk-rviz-plugins
