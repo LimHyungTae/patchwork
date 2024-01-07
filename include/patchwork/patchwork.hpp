@@ -12,6 +12,7 @@
 #include <pcl/io/pcd_io.h>
 
 #include <tbb/parallel_for.h>
+#include <tbb/blocked_range.h>
 
 #define NUM_HEURISTIC_MAX_PTS_IN_PATCH 3000
 #define MARKER_Z_VALUE -2.2
@@ -582,44 +583,50 @@ void PatchWork<PointT>::estimate_ground(
 
     int num_patches = patch_indices_.size();
 
-    tbb::parallel_for(0, num_patches, [&](int i) {
-        const auto &patch_idx = patch_indices_[i];
-        const int zone_idx = patch_idx.zone_idx_;
-        const int ring_idx = patch_idx.ring_idx_;
-        const int sector_idx = patch_idx.sector_idx_;
-        const int concentric_idx = patch_idx.concentric_idx_;
+    // HT comments: TBB w/ blocked_range was faster in my desktop
+    // 117 Hz vs 126 Hz
+    // tbb::parallel_for(0, num_patches, [&](int i) {
+    tbb::parallel_for(tbb::blocked_range<int>(0, num_patches),
+                   [&](tbb::blocked_range<int> r) {
+        for (int i = r.begin(); i < r.end(); ++i) {
+            const auto &patch_idx     = patch_indices_[i];
+            const int  zone_idx       = patch_idx.zone_idx_;
+            const int  ring_idx       = patch_idx.ring_idx_;
+            const int  sector_idx     = patch_idx.sector_idx_;
+            const int  concentric_idx = patch_idx.concentric_idx_;
 
-        auto &patch = ConcentricZoneModel_[zone_idx][ring_idx][sector_idx];
+            auto &patch = ConcentricZoneModel_[zone_idx][ring_idx][sector_idx];
 
-        auto &feat = features_[i];
-        auto &regionwise_ground = regionwise_grounds_[i];
-        auto &regionwise_nonground = regionwise_nongrounds_[i];
-        auto &status = statuses_[i];
+            auto &feat                 = features_[i];
+            auto &regionwise_ground    = regionwise_grounds_[i];
+            auto &regionwise_nonground = regionwise_nongrounds_[i];
+            auto &status               = statuses_[i];
 
-        if (patch.points.size() > num_min_pts_) {
-            double t_tmp0 = ros::Time::now().toSec();
-            // 22.05.02 update
-            // Region-wise sorting is adopted, which is much faster than global sorting!
-            sort(patch.points.begin(), patch.points.end(), point_z_cmp<PointT>);
-            extract_piecewiseground(zone_idx, patch, feat, regionwise_ground, regionwise_nonground);
-            double t_tmp1 = ros::Time::now().toSec();
+            if (patch.points.size() > num_min_pts_) {
+                double t_tmp0 = ros::Time::now().toSec();
+                // 22.05.02 update
+                // Region-wise sorting is adopted, which is much faster than global sorting!
+                sort(patch.points.begin(), patch.points.end(), point_z_cmp<PointT>);
+                extract_piecewiseground(zone_idx, patch, feat, regionwise_ground, regionwise_nonground);
+                double t_tmp1 = ros::Time::now().toSec();
 
-            const double ground_z_vec       = abs(feat.normal_(2));
-            const double ground_z_elevation = feat.mean_(2);
-            const double surface_variable   =
+                const double ground_z_vec       = abs(feat.normal_(2));
+                const double ground_z_elevation = feat.mean_(2);
+                const double surface_variable   =
                                  feat.singular_values_.minCoeff() /
-                                 (feat.singular_values_(0) + feat.singular_values_(1) + feat.singular_values_(2));
+                                     (feat.singular_values_(0) + feat.singular_values_(1) + feat.singular_values_(2));
 
-            status = determine_ground_likelihood_estimation_status(concentric_idx, ground_z_vec,
-                                                                         ground_z_elevation, surface_variable);
-        } else {
-            // Why? Because it is better to reject noise points
-            // That is, these noise points sometimes lead to mis-recognition or wrong clustering
-            // Thus, in practice, just rejecting them is better than using them
-            // But note that this may degrade quantitative ground segmentation performance
-            regionwise_ground = patch;
-            regionwise_nonground.clear();
-            status = FEW_POINTS;
+                status = determine_ground_likelihood_estimation_status(concentric_idx, ground_z_vec,
+                                                                       ground_z_elevation, surface_variable);
+            } else {
+                // Why? Because it is better to reject noise points
+                // That is, these noise points sometimes lead to mis-recognition or wrong clustering
+                // Thus, in practice, just rejecting them is better than using them
+                // But note that this may degrade quantitative ground segmentation performance
+                regionwise_ground = patch;
+                regionwise_nonground.clear();
+                status = FEW_POINTS;
+            }
         }
     });
 
