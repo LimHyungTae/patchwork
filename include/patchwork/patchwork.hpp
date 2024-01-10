@@ -510,6 +510,10 @@ void PatchWork<PointT>::estimate_sensor_height(pcl::PointCloud<PointT> cloud_in)
 
     // Setting for consensus set-based height estimation
     int N = ground_elevations_wrt_the_origin.size();
+    cout << "\033[1;33m[ATAT] N: " << N << " -> " << ground_elevations_wrt_the_origin.size() <<"\033[0m" << endl;
+    if (ground_elevations_wrt_the_origin.size() == 0) {
+      throw invalid_argument("No valid ground points for ATAT! Please check the input data and `max_r_for_ATAT`");
+    }
     Eigen::Matrix<double, 1, Eigen::Dynamic> values = Eigen::MatrixXd::Ones(1, N);
     Eigen::Matrix<double, 1, Eigen::Dynamic> ranges = noise_bound_ * Eigen::MatrixXd::Ones(1, N);
     Eigen::Matrix<double, 1, Eigen::Dynamic> weights = 1.0 / (noise_bound_ * noise_bound_) * Eigen::MatrixXd::Ones(1, N);
