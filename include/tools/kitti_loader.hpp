@@ -47,7 +47,7 @@ public:
         if (!file) {
             throw invalid_argument("Could not open the .bin file!");
         }
-        std::vector<float> buffer(1000000);
+        std::vector<float> buffer(3000000);
         size_t num_points = fread(reinterpret_cast<char *>(buffer.data()), sizeof(float), buffer.size(), file) / 4;
         fclose(file);
 
