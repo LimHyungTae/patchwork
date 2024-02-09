@@ -14,6 +14,37 @@
 #include <tbb/parallel_for.h>
 #include <tbb/blocked_range.h>
 
+// vector cout operator
+template <typename T>
+std::ostream& operator<<(std::ostream& os, const std::vector<T>& vec) {
+    os << "[ ";
+    for (const auto& element : vec) {
+        os << element << " ";
+    }
+    os << "]";
+    return os;
+}
+
+// conditional parameter loading function for unorthodox (and normal) parameter locations
+template<typename T>
+bool condParam(ros::NodeHandle* nh, const std::string& param_name, T& param_val, const T& default_val, const std::string& prefix = "/patchwork") {
+    if (nh->hasParam(prefix + "/" + param_name)) {
+        if (nh->getParam(prefix + "/" + param_name, param_val)) {
+            ROS_INFO_STREAM("param '" << prefix << "/" << param_name << "' -> '" << param_val << "'");
+            return true;
+        }
+    }
+    else if (nh->hasParam(ros::this_node::getName() + "/" + param_name)) {
+        if (nh->getParam(ros::this_node::getName() + "/" + param_name, param_val)) {
+            ROS_INFO_STREAM("param '" << ros::this_node::getName() << "/" << param_name << "' -> '" << param_val << "'");
+            return true;
+        }
+    }
+    param_val = default_val;
+    ROS_INFO_STREAM("param '" << param_name << "' -> '" << param_val << "' (default)");
+    return false;
+}
+
 #define NUM_HEURISTIC_MAX_PTS_IN_PATCH 3000
 #define MARKER_Z_VALUE -2.2
 
@@ -77,36 +108,56 @@ public:
 
     PatchWork() {};
 
-    PatchWork(ros::NodeHandle *nh) : node_handle_(*nh) {
+    std::string frame_patchwork = "map";
+
+    template<typename T>
+    bool condParam(ros::NodeHandle* nh, const std::string& param_name, T& param_val, const T& default_val, const std::string& prefix = "/patchwork") const {
+        if (nh->hasParam(prefix + "/" + param_name)) {
+            if (nh->getParam(prefix + "/" + param_name, param_val)) {
+                ROS_INFO_STREAM("param '" << prefix << "/" << param_name << "' -> '" << param_val << "'");
+                return true;
+            }
+        }
+        else if (nh->hasParam(ros::this_node::getName() + "/" + param_name)) {
+            if (nh->getParam(ros::this_node::getName() + "/" + param_name, param_val)) {
+                ROS_INFO_STREAM("param '" << ros::this_node::getName() << "/" << param_name << "' -> '" << param_val << "'");
+                return true;
+            }
+        }
+        param_val = default_val;
+        ROS_INFO_STREAM("param '" << param_name << "' -> '" << param_val << "' (default)");
+        return false;
+    }
+
+    PatchWork(ros::NodeHandle *nh) {
         // Init ROS related
         ROS_INFO("Inititalizing PatchWork...");
+        condParam(nh, "verbose", verbose_, false);
 
-        node_handle_.param<double>("/sensor_height", sensor_height_, 1.723);
-        node_handle_.param<bool>("/patchwork/verbose", verbose_, false);
+        condParam(nh, "sensor_height", sensor_height_, 1.723, "");
 
-        node_handle_.param<bool>("/patchwork/ATAT/ATAT_ON", ATAT_ON_, false);
-        node_handle_.param("/patchwork/ATAT/max_r_for_ATAT", max_r_for_ATAT_, 5.0);
-        node_handle_.param("/patchwork/ATAT/num_sectors_for_ATAT", num_sectors_for_ATAT_, 20);
-        node_handle_.param("/patchwork/ATAT/noise_bound", noise_bound_, 0.2);
+        condParam(nh, "ATAT/ATAT_ON", ATAT_ON_, false);
+        condParam(nh, "ATAT/max_r_for_ATAT", max_r_for_ATAT_, 5.0);
+        condParam(nh, "ATAT/num_sectors_for_ATAT", num_sectors_for_ATAT_, 20);
+        condParam(nh, "ATAT/noise_bound", noise_bound_, 0.2);
 
-        node_handle_.param("/patchwork/num_iter", num_iter_, 3);
-        node_handle_.param("/patchwork/num_lpr", num_lpr_, 20);
-        node_handle_.param("/patchwork/num_min_pts", num_min_pts_, 10);
-        node_handle_.param("/patchwork/th_seeds", th_seeds_, 0.4);
-        node_handle_.param("/patchwork/th_dist", th_dist_, 0.3);
-        node_handle_.param("/patchwork/max_r", max_range_, 80.0);
-        node_handle_.param("/patchwork/min_r", min_range_, 2.7); // It indicates bodysize of the car.
-        node_handle_.param("/patchwork/uniform/num_rings", num_rings_, 30);
-        node_handle_.param("/patchwork/uniform/num_sectors", num_sectors_, 108);
-        node_handle_.param("/patchwork/uprightness_thr", uprightness_thr_, 0.5); // The larger, the more strict
-        node_handle_.param("/patchwork/adaptive_seed_selection_margin", adaptive_seed_selection_margin_,
-                           -1.1); // The more larger, the more soft
+        condParam(nh, "num_iter", num_iter_, 3);
+        condParam(nh, "num_lpr", num_lpr_, 20);
+        condParam(nh, "num_min_pts", num_min_pts_, 10);
+        condParam(nh, "th_seeds", th_seeds_, 0.4);
+        condParam(nh, "th_dist", th_dist_, 0.3);
+        condParam(nh, "max_r", max_range_, 80.0);
+        condParam(nh, "min_r", min_range_, 2.7); // It indicates bodysize of the car.
+        condParam(nh, "uniform/num_rings", num_rings_, 30);
+        condParam(nh, "uniform/num_sectors", num_sectors_, 108);
+        condParam(nh, "uprightness_thr", uprightness_thr_, 0.5); // The larger, the more strict
+        condParam(nh, "adaptive_seed_selection_margin", adaptive_seed_selection_margin_, -1.1); // The more larger, the more soft
 
         // It is not in the paper
         // It is also not matched our philosophy, but it is employed to reject some FPs easily & intuitively.
         // For patchwork, it is only applied on Z3 and Z4
-        node_handle_.param<bool>("/patchwork/using_global_elevation", using_global_thr_, true);
-        node_handle_.param("/patchwork/global_elevation_threshold", global_elevation_thr_, 0.0);
+        condParam(nh, "using_global_elevation", using_global_thr_, true);
+        condParam(nh, "global_elevation_threshold", global_elevation_thr_, 0.0);
 
         if (using_global_thr_) {
             cout << "\033[1;33m[Warning] Global elevation threshold is turned on :" << global_elevation_thr_ << "\033[0m" << endl;
@@ -125,12 +176,12 @@ public:
         ROS_INFO("adaptive_seed_selection_margin: %f", adaptive_seed_selection_margin_);
 
         // CZM denotes 'Concentric Zone Model'. Please refer to our paper
-        node_handle_.getParam("/patchwork/czm/num_zones", num_zones_);
-        node_handle_.getParam("/patchwork/czm/num_sectors_each_zone", num_sectors_each_zone_);
-        node_handle_.getParam("/patchwork/czm/num_rings_each_zone", num_rings_each_zone_);
-        node_handle_.getParam("/patchwork/czm/min_ranges_each_zone", min_ranges_);
-        node_handle_.getParam("/patchwork/czm/elevation_thresholds", elevation_thr_);
-        node_handle_.getParam("/patchwork/czm/flatness_thresholds", flatness_thr_);
+        condParam(nh, "czm/num_zones", num_zones_, 4);
+        condParam(nh, "czm/num_sectors_each_zone", num_sectors_each_zone_, {16, 32, 54, 32});
+        condParam(nh, "czm/num_rings_each_zone", num_rings_each_zone_, {2, 4, 4, 4});
+        condParam(nh, "czm/min_ranges_each_zone", min_ranges_, {2.7, 12.3625, 22.025, 41.35});
+        condParam(nh, "czm/elevation_thresholds", elevation_thr_, {0.523, 0.746, 0.879, 1.125});
+        condParam(nh, "czm/flatness_thresholds", flatness_thr_, {0.0005, 0.000725, 0.001, 0.001});
 
         ROS_INFO("\033[1;32mUprightness\33[0m threshold: %f", uprightness_thr_);
         ROS_INFO("\033[1;32mElevation\33[0m thresholds: %f %f %f %f", elevation_thr_[0],elevation_thr_[1], elevation_thr_[2], elevation_thr_[3]);
@@ -144,15 +195,17 @@ public:
         // It equals to elevation_thr_.size()/flatness_thr_.size();
         num_rings_of_interest_ = elevation_thr_.size();
 
-        node_handle_.param("/patchwork/visualize", visualize_, true);
-        poly_list_.header.frame_id = "map";
+        condParam(nh, "visualize", visualize_, true);
+        condParam<std::string>(nh, "frame_patchwork", frame_patchwork, frame_patchwork);
+
+        poly_list_.header.frame_id = frame_patchwork;
         poly_list_.polygons.reserve(130000);
 
         reverted_points_by_flatness_.reserve(NUM_HEURISTIC_MAX_PTS_IN_PATCH);
 
-        PlanePub      = node_handle_.advertise<jsk_recognition_msgs::PolygonArray>("/gpf/plane", 100);
-        RevertedCloudPub = node_handle_.advertise<sensor_msgs::PointCloud2>("/revert_pc", 100);
-        RejectedCloudPub = node_handle_.advertise<sensor_msgs::PointCloud2>("/reject_pc", 100);
+        PlanePub      = nh->advertise<jsk_recognition_msgs::PolygonArray>("/gpf/plane", 100);
+        RevertedCloudPub = nh->advertise<sensor_msgs::PointCloud2>("/revert_pc", 100);
+        RejectedCloudPub = nh->advertise<sensor_msgs::PointCloud2>("/reject_pc", 100);
 
         min_range_z2_ = min_ranges_[1];
         min_range_z3_ = min_ranges_[2];
@@ -206,8 +259,6 @@ public:
     geometry_msgs::PolygonStamped set_plane_polygon(const MatrixXf &normal_v, const float &d);
 
 private:
-    ros::NodeHandle node_handle_;
-
     // For ATAT (All-Terrain Automatic heighT estimator)
     bool ATAT_ON_;
     double noise_bound_;
@@ -706,11 +757,11 @@ void PatchWork<PointT>::estimate_ground(
         sensor_msgs::PointCloud2 cloud_ROS;
         pcl::toROSMsg(reverted_points_by_flatness_, cloud_ROS);
         cloud_ROS.header.stamp    = ros::Time::now();
-        cloud_ROS.header.frame_id = "map";
+        cloud_ROS.header.frame_id = frame_patchwork;
         RevertedCloudPub.publish(cloud_ROS);
         pcl::toROSMsg(rejected_points_by_elevation_, cloud_ROS);
         cloud_ROS.header.stamp    = ros::Time::now();
-        cloud_ROS.header.frame_id = "map";
+        cloud_ROS.header.frame_id = frame_patchwork;
         RejectedCloudPub.publish(cloud_ROS);
     }
     PlanePub.publish(poly_list_);
