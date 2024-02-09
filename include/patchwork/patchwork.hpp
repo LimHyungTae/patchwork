@@ -383,7 +383,7 @@ void PatchWork<PointT>::extract_initial_seeds_(
         static double lowest_h_margin_in_close_zone = (sensor_height_ == 0.0) ? -0.1 : adaptive_seed_selection_margin_ *
                                                                                        sensor_height_;
         if (zone_idx == 0) {
-            for (int i = 0; i < p_sorted.points.size(); i++) {
+            for (size_t i = 0; i < p_sorted.points.size(); i++) {
                 if (p_sorted.points[i].z < lowest_h_margin_in_close_zone) {
                     ++init_idx;
                 } else {
@@ -394,14 +394,14 @@ void PatchWork<PointT>::extract_initial_seeds_(
     }
 
     // Calculate the mean height value.
-    for (int i          = init_idx; i < p_sorted.points.size() && cnt < num_lpr_; i++) {
+    for (size_t i = init_idx; i < p_sorted.points.size() && cnt < num_lpr_; i++) {
         sum += p_sorted.points[i].z;
         cnt++;
     }
     double   lpr_height = cnt != 0 ? sum / cnt : 0;// in case divide by 0
 
     // iterate pointcloud, filter those height is less than lpr.height+th_seeds_
-    for (int i = 0; i < p_sorted.points.size(); i++) {
+    for (size_t i = 0; i < p_sorted.points.size(); i++) {
         if (p_sorted.points[i].z < lpr_height + th_seeds_) {
             init_seeds.points.push_back(p_sorted.points[i]);
         }
@@ -412,16 +412,15 @@ inline
 double PatchWork<PointT>::consensus_set_based_height_estimation(const Eigen::RowVectorXd& X,
                                                               const Eigen::RowVectorXd& ranges,
                                                               const Eigen::RowVectorXd& weights) {
-    // check input parameters
-    bool dimension_inconsistent = (X.rows() != ranges.rows()) || (X.cols() != ranges.cols());
+    // check input parameters - dimension inconsistent test
+    assert(!( (X.rows() != ranges.rows()) || (X.cols() != ranges.cols()) ));
 
-    bool only_one_element = (X.rows() == 1) && (X.cols() == 1);
-    assert(!dimension_inconsistent);
-    assert(!only_one_element); // TODO: admit a trivial solution
+    // check input parameters - only one element test
+    assert(!( (X.rows() == 1) && (X.cols() == 1) )); // TODO: admit a trivial solution
 
     int N = X.cols();
     std::vector<std::pair<double, int>> h;
-    for (size_t i= 0 ;i < N ;++i){
+    for (size_t i= 0; (int)i < N ;++i){
         h.push_back(std::make_pair(X(i) - ranges(i), i+1));
         h.push_back(std::make_pair(X(i) + ranges(i), -i-1));
     }
@@ -440,7 +439,7 @@ double PatchWork<PointT>::consensus_set_based_height_estimation(const Eigen::Row
     double sum_xi = 0;
     double sum_xi_square = 0;
 
-    for (size_t i = 0 ; i < nr_centers ; ++i){
+    for (size_t i = 0 ; (int)i < nr_centers ; ++i){
 
         int idx = int(std::abs(h.at(i).second)) - 1; // Indices starting at 1
         int epsilon = (h.at(i).second > 0) ? 1 : -1;
@@ -471,7 +470,7 @@ void PatchWork<PointT>::estimate_sensor_height(pcl::PointCloud<PointT> cloud_in)
     // ATAT: All-Terrain Automatic HeighT estimator
     Ring ring_for_ATAT(num_sectors_for_ATAT_);
     for (auto const &pt : cloud_in.points) {
-        int    ring_idx, sector_idx;
+        int    sector_idx;
         double r = xy2radius(pt.x, pt.y);
 
         float sector_size_for_ATAT = 2 * M_PI / num_sectors_for_ATAT_;
@@ -490,7 +489,7 @@ void PatchWork<PointT>::estimate_sensor_height(pcl::PointCloud<PointT> cloud_in)
     vector<double> planarities;
     for (int i = 0; i < num_sectors_for_ATAT_; ++i) {
 
-        if(ring_for_ATAT[i].size() < num_min_pts_ ){ continue; }
+        if((int)ring_for_ATAT[i].size() < num_min_pts_ ){ continue; }
 
         pcl::PointCloud<PointT> dummy_est_ground;
         pcl::PointCloud<PointT> dummy_est_non_ground;
@@ -549,9 +548,9 @@ void PatchWork<PointT>::estimate_ground(
         initialized_ = false;
     }
 
-    static double start, t0, t1, t2, end;
-
-    double                  t_total_ground   = 0.0;
+    static double start, end;
+    // static double start, t0, t1, t2;
+    // double                  t_total_ground   = 0.0;
     double                  t_total_estimate = 0.0;
     // 1.Msg to pointcloud
     pcl::PointCloud<PointT> cloud_in_tmp = cloud_in;
@@ -562,7 +561,7 @@ void PatchWork<PointT>::estimate_ground(
     // As there are some error mirror reflection under the ground,
     // Sort point according to height, here uses z-axis in default
     // -2.0 is a rough criteria
-    int i = 0;
+    size_t i = 0;
     while (i < cloud_in_tmp.points.size()) {
         if (cloud_in_tmp.points[i].z < -sensor_height_ - 2.0) {
             std::iter_swap(cloud_in_tmp.points.begin() + i, cloud_in_tmp.points.end() - 1);
@@ -572,7 +571,7 @@ void PatchWork<PointT>::estimate_ground(
         }
     }
 
-    t1 = ros::Time::now().toSec();
+    // t1 = ros::Time::now().toSec();
 
     for (int k = 0; k < num_zones_; ++k) {
         flush_patches_in_zone(ConcentricZoneModel_[k], num_sectors_each_zone_[k], num_rings_each_zone_[k]);
@@ -606,13 +605,11 @@ void PatchWork<PointT>::estimate_ground(
             auto &regionwise_nonground = regionwise_nongrounds_[i];
             auto &status               = statuses_[i];
 
-            if (patch.points.size() > num_min_pts_) {
-                double t_tmp0 = ros::Time::now().toSec();
+            if ((int)patch.points.size() > num_min_pts_) {
                 // 22.05.02 update
                 // Region-wise sorting is adopted, which is much faster than global sorting!
                 sort(patch.points.begin(), patch.points.end(), point_z_cmp<PointT>);
                 extract_piecewiseground(zone_idx, patch, feat, regionwise_ground, regionwise_nonground);
-                double t_tmp1 = ros::Time::now().toSec();
 
                 const double ground_z_vec       = abs(feat.normal_(2));
                 const double ground_z_elevation = feat.mean_(2);
@@ -641,7 +638,7 @@ void PatchWork<PointT>::estimate_ground(
         const int  sector_idx     = patch_idx.sector_idx_;
         const int  concentric_idx = patch_idx.concentric_idx_;
 
-        const auto &patch                = ConcentricZoneModel_[zone_idx][ring_idx][sector_idx];
+        // const auto &patch                = ConcentricZoneModel_[zone_idx][ring_idx][sector_idx];
         const auto &feat                 = features_[i];
         const auto &regionwise_ground    = regionwise_grounds_[i];
         const auto &regionwise_nonground = regionwise_nongrounds_[i];

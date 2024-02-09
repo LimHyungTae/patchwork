@@ -78,7 +78,7 @@ public:
             std::vector<uint32_t> labels(num_points);
             label_input.read((char*)&labels[0], num_points * sizeof(uint32_t));
 
-            for (int i = 0; i < num_points; i++) {
+            for (size_t i = 0; i < num_points; i++) {
                 auto &pt = cloud.at(i);
                 pt.x = buffer[i * 4];
                 pt.y = buffer[i * 4 + 1];
