@@ -33,7 +33,7 @@ void signal_callback_handler(int signum) {
 }
 
 template<typename T>
-sensor_msgs::PointCloud2 cloud2msg(pcl::PointCloud<T> cloud, std::string frame_id = "map") {
+sensor_msgs::PointCloud2 cloud2msg(pcl::PointCloud<T> cloud, std::string frame_id ) {
     sensor_msgs::PointCloud2 cloud_ROS;
     pcl::toROSMsg(cloud, cloud_ROS);
     cloud_ROS.header.frame_id = frame_id;
@@ -44,9 +44,9 @@ int main(int argc, char**argv) {
     ros::init(argc, argv, "Ros-Kitti-Publisher");
 
     ros::NodeHandle nh;
-    nh.param<string>("/algorithm", algorithm, "patchwork");
-    nh.param<string>("/seq", seq, "00");
-    nh.param<string>("/data_path", data_path, "/");
+    condParam<string>(&nh, "/algorithm", algorithm, "patchwork", "");
+    condParam<string>(&nh, "/seq", seq, "00", "");
+    condParam<string>(&nh, "/data_path", data_path, "/", "");
 
     ros::Rate r(10);
     ros::Publisher CloudPublisher = nh.advertise<sensor_msgs::PointCloud2>("/patchwork/cloud", 100, true);
@@ -61,7 +61,7 @@ int main(int argc, char**argv) {
         cout << n << "th node is published!" << endl;
         pcl::PointCloud<PointType> pc_curr;
         loader.get_cloud(n, pc_curr);
-        CloudPublisher.publish(cloud2msg(pc_curr));
+        CloudPublisher.publish(cloud2msg(pc_curr, PatchworkGroundSeg->frame_patchwork));
         r.sleep();
     }
     return 0;

@@ -37,7 +37,7 @@ pcl::PointCloud<T> cloudmsg2cloud(const sensor_msgs::PointCloud2::ConstPtr& clou
 }
 
 template<typename T>
-sensor_msgs::PointCloud2 cloud2msg(pcl::PointCloud<T> cloud, std::string frame_id = "map")
+sensor_msgs::PointCloud2 cloud2msg(pcl::PointCloud<T> cloud, std::string frame_id )
 {
     sensor_msgs::PointCloud2 cloud_ROS;
     pcl::toROSMsg(cloud, cloud_ROS);
@@ -57,8 +57,8 @@ void callbackNode(const sensor_msgs::PointCloud2::ConstPtr& msg) {
     PatchworkGroundSeg->estimate_ground(pc_curr, pc_ground, pc_non_ground, time_taken);
 
 
-    auto msg_curr = cloud2msg(pc_curr);
-    auto msg_ground = cloud2msg(pc_ground);
+    auto msg_curr = cloud2msg(pc_curr, PatchworkGroundSeg->frame_patchwork);
+    auto msg_ground = cloud2msg(pc_ground, PatchworkGroundSeg->frame_patchwork);
 
     patchwork::ground_estimate cloud_estimate;
     cloud_estimate.header = msg->header;
@@ -67,17 +67,17 @@ void callbackNode(const sensor_msgs::PointCloud2::ConstPtr& msg) {
     EstimatePublisher.publish(cloud_estimate);
 
     /*
-    CloudPublisher.publish(cloud2msg(pc_curr));
-    PositivePublisher.publish(cloud2msg(pc_ground));
-    NegativePublisher.publish(cloud2msg(pc_non_ground));
+    CloudPublisher.publish(cloud2msg(pc_curr, PatchworkGroundSeg->frame_patchwork));
+    PositivePublisher.publish(cloud2msg(pc_ground, PatchworkGroundSeg->frame_patchwork));
+    NegativePublisher.publish(cloud2msg(pc_non_ground, PatchworkGroundSeg->frame_patchwork));
     */
 }
 
 int main(int argc, char **argv) {
     ros::init(argc, argv, "Benchmark");
     ros::NodeHandle nh;
-    nh.param<string>("/algorithm", algorithm, "patchwork");
-    nh.param<string>("/seq", seq, "00");
+    condParam<string>(&nh, "/algorithm", algorithm, "patchwork", "");
+    condParam<string>(&nh, "/seq", seq, "00", "");
 
     PatchworkGroundSeg.reset(new PatchWork<PointType>(&nh));
 

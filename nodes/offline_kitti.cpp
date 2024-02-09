@@ -48,7 +48,7 @@ void signal_callback_handler(int signum) {
 void pub_score(std::string mode, double measure) {
     static int                 SCALE = 5;
     visualization_msgs::Marker marker;
-    marker.header.frame_id                  = "map";
+    marker.header.frame_id                  = PatchworkGroundSeg->frame_patchwork;
     marker.header.stamp                     = ros::Time();
     marker.ns                               = "my_namespace";
     marker.id                               = 0;
@@ -85,7 +85,7 @@ pcl::PointCloud<T> cloudmsg2cloud(sensor_msgs::PointCloud2 cloudmsg) {
 }
 
 template<typename T>
-sensor_msgs::PointCloud2 cloud2msg(pcl::PointCloud<T> cloud, std::string frame_id = "map") {
+sensor_msgs::PointCloud2 cloud2msg(pcl::PointCloud<T> cloud, std::string frame_id ) {
     sensor_msgs::PointCloud2 cloud_ROS;
     pcl::toROSMsg(cloud, cloud_ROS);
     cloud_ROS.header.frame_id = frame_id;
@@ -98,13 +98,13 @@ int main(int argc, char**argv) {
 
     ros::NodeHandle nh;
     int start_frame, end_frame;
-    nh.param<int>("/start_frame", start_frame, 0);
-    nh.param<int>("/end_frame", end_frame, 10000);
-    nh.param<bool>("/save_flag", save_flag, false);
-    nh.param<bool>("/use_sor_before_save", use_sor_before_save, false);
-    nh.param<string>("/algorithm", algorithm, "patchwork");
-    nh.param<string>("/seq", seq, "00");
-    nh.param<string>("/data_path", data_path, "/");
+    condParam<int>(&nh, "/start_frame", start_frame, 0, "");
+    condParam<int>(&nh, "/end_frame", end_frame, 10000, "");
+    condParam<bool>(&nh, "/save_flag", save_flag, false, "");
+    condParam<bool>(&nh, "/use_sor_before_save", use_sor_before_save, false, "");
+    condParam<string>(&nh, "/algorithm", algorithm, "patchwork", "");
+    condParam<string>(&nh, "/seq", seq, "00", "");
+    condParam<string>(&nh, "/data_path", data_path, "/", "");
 
     CloudPublisher     = nh.advertise<sensor_msgs::PointCloud2>("/benchmark/cloud", 100, true);
     TPPublisher        = nh.advertise<sensor_msgs::PointCloud2>("/benchmark/TP", 100, true);
@@ -193,15 +193,14 @@ int main(int argc, char**argv) {
             }
         }
 // -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
-
-        CloudPublisher.publish(cloud2msg(pc_curr));
-        TPPublisher.publish(cloud2msg(TP));
-        FPPublisher.publish(cloud2msg(FP));
-        FNPublisher.publish(cloud2msg(FN));
-        TNPublisher.publish(cloud2msg(TN));
-        EstGroundPublisher.publish(cloud2msg(pc_ground));
+        CloudPublisher.publish(cloud2msg(pc_curr, PatchworkGroundSeg->frame_patchwork));
+        TPPublisher.publish(cloud2msg(TP, PatchworkGroundSeg->frame_patchwork));
+        FPPublisher.publish(cloud2msg(FP, PatchworkGroundSeg->frame_patchwork));
+        FNPublisher.publish(cloud2msg(FN, PatchworkGroundSeg->frame_patchwork));
+        TNPublisher.publish(cloud2msg(TN, PatchworkGroundSeg->frame_patchwork));
+        EstGroundPublisher.publish(cloud2msg(pc_ground, PatchworkGroundSeg->frame_patchwork));
         if (use_sor_before_save) {
-            EstGroundFilteredPublisher.publish(cloud2msg(*filtered));
+            EstGroundFilteredPublisher.publish(cloud2msg(*filtered, PatchworkGroundSeg->frame_patchwork));
         }
         pub_score("p", precision);
         pub_score("r", recall);

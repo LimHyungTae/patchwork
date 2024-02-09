@@ -66,8 +66,8 @@ POINT_CLOUD_REGISTER_POINT_STRUCT(PointXYZILID,
                                   (float, y, y)
                                   (float, z, z)
                                   (float, intensity, intensity)
-                                  (uint16_t, label, label)
-                                  (uint16_t, id, id))
+                                  (std::uint16_t, label, label)
+                                  (std::uint16_t, id, id))
 
 
 void PointXYZILID2XYZI(pcl::PointCloud<PointXYZILID>& src,
@@ -106,14 +106,13 @@ int count_num_ground(const pcl::PointCloud<PointXYZILID>& pc){
 
 std::map<int, int> set_initial_gt_counts(std::vector<int>& gt_classes){
   map<int, int> gt_counts;
-  for (int i = 0; i< gt_classes.size(); ++i){
+  for (size_t i = 0; i< gt_classes.size(); ++i){
     gt_counts.insert(pair<int,int>(gt_classes.at(i), 0));
   }
   return gt_counts;
 }
 
 std::map<int, int> count_num_each_class(const pcl::PointCloud<PointXYZILID>& pc){
-  int num_ground = 0;
   auto gt_counts = set_initial_gt_counts(ground_classes);
   std::vector<int>::iterator iter;
 
@@ -184,7 +183,7 @@ void calculate_precision_recall(const pcl::PointCloud<PointXYZILID>& pc_curr,
   }
 }
 
-int save_all_labels(const pcl::PointCloud<PointXYZILID>& pc, string ABS_DIR, string seq, int count){
+void save_all_labels(const pcl::PointCloud<PointXYZILID>& pc, string ABS_DIR, string seq, int count){
 
   std::string count_str = std::to_string(count);
   std::string count_str_padded = std::string(NUM_ZEROS - count_str.length(), '0') + count_str;

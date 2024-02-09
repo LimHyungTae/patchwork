@@ -36,7 +36,7 @@ pcl::PointCloud<T> cloudmsg2cloud(sensor_msgs::PointCloud2 cloudmsg)
 }
 
 template<typename T>
-sensor_msgs::PointCloud2 cloud2msg(pcl::PointCloud<T> cloud, std::string frame_id = "map")
+sensor_msgs::PointCloud2 cloud2msg(pcl::PointCloud<T> cloud, std::string frame_id )
 {
     sensor_msgs::PointCloud2 cloud_ROS;
     pcl::toROSMsg(cloud, cloud_ROS);
@@ -67,10 +67,10 @@ int main(int argc, char **argv) {
     bool stop_each_frame;
     ros::init(argc, argv, "Benchmark");
     ros::NodeHandle nh;
-    nh.param<string>("/algorithm", algorithm, "patchwork");
-    nh.param<string>("/extension", extension, "pcd");
-    nh.param<string>("/file_dir", file_dir, "");
-    nh.param<bool>("/stop_each_frame", stop_each_frame, false);
+    condParam<string>(&nh, "/algorithm", algorithm, "patchwork", "");
+    condParam<string>(&nh, "/extension", extension, "pcd", "");
+    condParam<string>(&nh, "/file_dir", file_dir, "", "");
+    condParam<bool>(&nh, "/stop_each_frame", stop_each_frame, false, "");
     ros::Rate loop_rate(10);
 
     PatchworkGroundSeg.reset(new PatchWork<PointType>(&nh));
@@ -100,9 +100,9 @@ int main(int argc, char **argv) {
         cout << i << "th operation..." << endl;
 
         PatchworkGroundSeg->estimate_ground(pc_curr, pc_ground, pc_non_ground, time_taken);
-        CloudPublisher.publish(cloud2msg(pc_curr));
-        PositivePublisher.publish(cloud2msg(pc_ground));
-        NegativePublisher.publish(cloud2msg(pc_non_ground));
+        CloudPublisher.publish(cloud2msg(pc_curr, PatchworkGroundSeg->frame_patchwork));
+        PositivePublisher.publish(cloud2msg(pc_ground, PatchworkGroundSeg->frame_patchwork));
+        NegativePublisher.publish(cloud2msg(pc_non_ground, PatchworkGroundSeg->frame_patchwork));
 
         if (stop_each_frame) {
             cout<< "STOP!" <<endl;

@@ -32,7 +32,7 @@ bool        is_kitti;
 void pub_score(std::string mode, double measure) {
     static int                 SCALE = 5;
     visualization_msgs::Marker marker;
-    marker.header.frame_id                  = "map";
+    marker.header.frame_id                  = PatchworkGroundSeg->frame_patchwork;
     marker.header.stamp                     = ros::Time();
     marker.ns                               = "my_namespace";
     marker.id                               = 0;
@@ -70,7 +70,7 @@ pcl::PointCloud<T> cloudmsg2cloud(sensor_msgs::PointCloud2 cloudmsg)
 }
 
 template<typename T>
-sensor_msgs::PointCloud2 cloud2msg(pcl::PointCloud<T> cloud, std::string frame_id = "map")
+sensor_msgs::PointCloud2 cloud2msg(pcl::PointCloud<T> cloud, std::string frame_id )
 {
     sensor_msgs::PointCloud2 cloud_ROS;
     pcl::toROSMsg(cloud, cloud_ROS);
@@ -129,16 +129,18 @@ void callbackNode(const sensor_msgs::PointCloud2::ConstPtr &msg) {
         }
     }
 
-    CloudPublisher.publish(cloud2msg(pc_curr));
+    CloudPublisher.publish(cloud2msg(pc_curr, PatchworkGroundSeg->frame_patchwork));
     if (is_kitti) {
-        TPPublisher.publish(cloud2msg(TP));
-        FPPublisher.publish(cloud2msg(FP));
-        FNPublisher.publish(cloud2msg(FN));
+        TPPublisher.publish(cloud2msg(TP, PatchworkGroundSeg->frame_patchwork));
+        FPPublisher.publish(cloud2msg(FP, PatchworkGroundSeg->frame_patchwork));
+        FNPublisher.publish(cloud2msg(FN, PatchworkGroundSeg->frame_patchwork));
     } else {
         // Since other dataset has no labels,
         // so only estimated ground points / non-ground points are available
-        GroundPublisher.publish(cloud2msg(pc_ground));
-        NonGroundPublisher.publish(cloud2msg(pc_non_ground));
+        if (GroundPublisher.getNumSubscribers())
+            GroundPublisher.publish(cloud2msg(pc_ground, PatchworkGroundSeg->frame_patchwork));
+        if (NonGroundPublisher.getNumSubscribers())
+            NonGroundPublisher.publish(cloud2msg(pc_non_ground, PatchworkGroundSeg->frame_patchwork));
     }
     pub_score("p", precision);
     pub_score("r", recall);
@@ -147,9 +149,9 @@ void callbackNode(const sensor_msgs::PointCloud2::ConstPtr &msg) {
 int main(int argc, char **argv) {
     ros::init(argc, argv, "Benchmark");
     ros::NodeHandle nh;
-    nh.param<string>("/algorithm", algorithm, "patchwork");
-    nh.param<string>("/seq", seq, "00");
-    nh.param<bool>("/is_kitti", is_kitti, true);
+    condParam<string>(&nh, "/algorithm", algorithm, "patchwork","");
+    condParam<string>(&nh, "/seq", seq, "00","");
+    condParam<bool>(&nh, "/is_kitti", is_kitti, true,"");
 
     PatchworkGroundSeg.reset(new PatchWork<PointType>(&nh));
 
@@ -157,8 +159,8 @@ int main(int argc, char **argv) {
     TPPublisher     = nh.advertise<sensor_msgs::PointCloud2>("/benchmark/TP", 100, true);
     FPPublisher     = nh.advertise<sensor_msgs::PointCloud2>("/benchmark/FP", 100, true);
     FNPublisher     = nh.advertise<sensor_msgs::PointCloud2>("/benchmark/FN", 100, true);
-    GroundPublisher = nh.advertise<sensor_msgs::PointCloud2>("/patchwork/ground", 100, true);
-    NonGroundPublisher = nh.advertise<sensor_msgs::PointCloud2>("/patchwork/non_ground", 100, true);
+    GroundPublisher = nh.advertise<sensor_msgs::PointCloud2>("/patchwork/ground", 100, false);
+    NonGroundPublisher = nh.advertise<sensor_msgs::PointCloud2>("/patchwork/non_ground", 100, false);
 
     PrecisionPublisher = nh.advertise<visualization_msgs::Marker>("/precision", 1, true);
     RecallPublisher    = nh.advertise<visualization_msgs::Marker>("/recall", 1, true);
