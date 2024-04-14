@@ -51,7 +51,7 @@ void save_ground_label(const std::string abs_dir, const int frame_num,
     int num_cloud_raw = cloud_raw.points.size();
     std::vector<uint32_t> labels(num_cloud_raw, EST_NON_GROUND); // 0: Non ground points
 
-    int N = cloud_est_ground.points.size();
+    size_t N = cloud_est_ground.points.size();
     PointCloud<num_t> cloud;
     cloud.pts.resize(N);
     for (size_t i = 0; i < N; i++) {
@@ -69,7 +69,7 @@ void save_ground_label(const std::string abs_dir, const int frame_num,
     my_kd_tree_t index(3 /*dim*/, cloud, {10 /* max leaf */});
 
     int num_valid = 0;
-    for (int j = 0; j < cloud_raw.points.size(); ++j) {
+    for (size_t j = 0; j < cloud_raw.points.size(); ++j) {
         const auto query_pcl = cloud_raw.points[j];
         const num_t query_pt[3] = {query_pcl.x, query_pcl.y, query_pcl.z};
 
