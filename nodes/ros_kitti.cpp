@@ -2,7 +2,6 @@
 #define PCL_NO_PRECOMPILE
 #include <patchwork/node.h>
 #include "patchwork/patchwork.hpp"
-#include <pcl_conversions/pcl_conversions.h>
 #include <visualization_msgs/Marker.h>
 
 #include "tools/kitti_loader.hpp"
