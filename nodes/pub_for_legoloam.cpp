@@ -37,11 +37,10 @@ pcl::PointCloud<T> cloudmsg2cloud(const sensor_msgs::PointCloud2::ConstPtr& clou
 }
 
 template<typename T>
-sensor_msgs::PointCloud2 cloud2msg(pcl::PointCloud<T> cloud, std::string frame_id )
+sensor_msgs::PointCloud2 cloud2msg(pcl::PointCloud<T> cloud)
 {
     sensor_msgs::PointCloud2 cloud_ROS;
     pcl::toROSMsg(cloud, cloud_ROS);
-    cloud_ROS.header.frame_id = frame_id;
     return cloud_ROS;
 }
 
@@ -50,6 +49,8 @@ void callbackNode(const sensor_msgs::PointCloud2::ConstPtr& msg) {
     pcl::PointCloud<PointType> pc_curr = cloudmsg2cloud<PointType>(msg);
     pcl::PointCloud<PointType> pc_ground;
     pcl::PointCloud<PointType> pc_non_ground;
+    pc_ground.header = pc_curr.header;
+    pc_non_ground.header = pc_curr.header;
 
     static double time_taken;
 

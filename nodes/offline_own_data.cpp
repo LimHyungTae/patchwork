@@ -28,14 +28,6 @@ string      seq;
 bool        save_flag;
 
 template<typename T>
-pcl::PointCloud<T> cloudmsg2cloud(sensor_msgs::PointCloud2 cloudmsg)
-{
-    pcl::PointCloud<T> cloudresult;
-    pcl::fromROSMsg(cloudmsg,cloudresult);
-    return cloudresult;
-}
-
-template<typename T>
 sensor_msgs::PointCloud2 cloud2msg(pcl::PointCloud<T> cloud, std::string frame_id )
 {
     sensor_msgs::PointCloud2 cloud_ROS;
