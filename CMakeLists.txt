@@ -9,17 +9,13 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 find_package(catkin REQUIRED COMPONENTS
+        geometry_msgs
+        message_generation
+        pcl_ros
         roscpp
         rospy
         std_msgs
-        roslaunch
-        cv_bridge
-        pcl_conversions
-        pcl_ros
-        geometry_msgs
-        laser_geometry
         sensor_msgs
-        message_generation
         )
 
 add_message_files(
@@ -41,7 +37,7 @@ find_package(Boost 1.54 REQUIRED)
 catkin_package(
         INCLUDE_DIRS
         LIBRARIES
-        CATKIN_DEPENDS roscpp rospy std_msgs
+        CATKIN_DEPENDS geometry_msgs message_runtime roscpp rospy sensor_msgs std_msgs
 )
 
 option(USE_SYSTEM_TBB "Use system pre-installed oneAPI/tbb" OFF)

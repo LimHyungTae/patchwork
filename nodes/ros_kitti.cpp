@@ -70,11 +70,10 @@ pcl::PointCloud<T> cloudmsg2cloud(sensor_msgs::PointCloud2 cloudmsg)
 }
 
 template<typename T>
-sensor_msgs::PointCloud2 cloud2msg(pcl::PointCloud<T> cloud, std::string frame_id )
+sensor_msgs::PointCloud2 cloud2msg(pcl::PointCloud<T> cloud)
 {
     sensor_msgs::PointCloud2 cloud_ROS;
     pcl::toROSMsg(cloud, cloud_ROS);
-    cloud_ROS.header.frame_id = frame_id;
     return cloud_ROS;
 }
 
@@ -83,6 +82,8 @@ void callbackNode(const sensor_msgs::PointCloud2::ConstPtr &msg) {
     pcl::PointCloud<PointType> pc_curr = cloudmsg2cloud<PointType>(*msg);
     pcl::PointCloud<PointType> pc_ground;
     pcl::PointCloud<PointType> pc_non_ground;
+    pc_ground.header = pc_curr.header;
+    pc_non_ground.header = pc_curr.header;
 
     static double time_taken;
 
@@ -111,6 +112,10 @@ void callbackNode(const sensor_msgs::PointCloud2::ConstPtr &msg) {
     pcl::PointCloud<PointType> FP;
     pcl::PointCloud<PointType> FN;
     pcl::PointCloud<PointType> TN;
+    TP.header = pc_curr.header;
+    FP.header = pc_curr.header;
+    FN.header = pc_curr.header;
+    TN.header = pc_curr.header;
 
     if (is_kitti) {
         discern_ground(pc_ground, TP, FP);
@@ -129,18 +134,18 @@ void callbackNode(const sensor_msgs::PointCloud2::ConstPtr &msg) {
         }
     }
 
-    CloudPublisher.publish(cloud2msg(pc_curr, PatchworkGroundSeg->frame_patchwork));
+    CloudPublisher.publish(cloud2msg(pc_curr));
     if (is_kitti) {
-        TPPublisher.publish(cloud2msg(TP, PatchworkGroundSeg->frame_patchwork));
-        FPPublisher.publish(cloud2msg(FP, PatchworkGroundSeg->frame_patchwork));
-        FNPublisher.publish(cloud2msg(FN, PatchworkGroundSeg->frame_patchwork));
+        TPPublisher.publish(cloud2msg(TP));
+        FPPublisher.publish(cloud2msg(FP));
+        FNPublisher.publish(cloud2msg(FN));
     } else {
         // Since other dataset has no labels,
         // so only estimated ground points / non-ground points are available
         if (GroundPublisher.getNumSubscribers())
-            GroundPublisher.publish(cloud2msg(pc_ground, PatchworkGroundSeg->frame_patchwork));
+            GroundPublisher.publish(cloud2msg(pc_ground));
         if (NonGroundPublisher.getNumSubscribers())
-            NonGroundPublisher.publish(cloud2msg(pc_non_ground, PatchworkGroundSeg->frame_patchwork));
+            NonGroundPublisher.publish(cloud2msg(pc_non_ground));
     }
     pub_score("p", precision);
     pub_score("r", recall);
