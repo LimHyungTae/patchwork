@@ -15,14 +15,14 @@
     <a href=https://github.com/LimHyungTae/patchwork/wiki>Project Wiki (for beginners)</a>
   <br />
   <br />
-  <div style="display: flex; justify-content: space-between;">
+  <div style="display: flex; justify-content: space-between; width: 100%;">
       <img src="img/demo_kitti00_v2.gif" alt="animated" style="width: 45%;" />
       <img src="img/demo_terrain_v3.gif" alt="animated" style="width: 45%;" />
   </div>
   <br />
-  Official page of *"Patchwork: Concentric Zone-based Region-wise Ground Segmentation <br />
-  with Ground Likelihood Estimation Using a 3D LiDAR Sensor"*, <br />
-  which is accepted by RA-L with IROS'21 option 
+  Official page of "Patchwork: Concentric Zone-based Region-wise Ground Segmentation <br />
+  with Ground Likelihood Estimation Using a 3D LiDAR Sensor", <br />
+  which is accepted by RA-L with IROS'21 option.
 </div>
 
 ---
