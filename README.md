@@ -1,20 +1,34 @@
-# Patchwork
+<div align="center">
+    <h1>Patchwork</h1>
+    <a href="https://https://github.com/LimHyungTae/patchwork/patchworkpp"><img src="https://img.shields.io/badge/-C++-blue?logo=cplusplus" /></a>
+    <a href="https://https://github.com/LimHyungTae/patchwork"><img src="https://img.shields.io/badge/ROS-Noetic-blue" /></a>
+    <a href="https://https://github.com/LimHyungTae/patchwork"><img src="https://img.shields.io/badge/Linux-FCC624?logo=linux&logoColor=black" /></a>
+    <a href="https://ieeexplore.ieee.org/document/9466396"><img src="https://img.shields.io/badge/DOI-10.1109/LRA.2021.3093009-004088.svg"/>
+    <br />
+    <br />
+    <a href=https://youtu.be/rclqeDi4gow>Video</a>
+    <span>&nbsp;&nbsp;•&nbsp;&nbsp;</span>
+    <a href="https://github.com/LimHyungTae/patchwork?tab=readme-ov-file#requirements">Install by ROS</a>
+    <span>&nbsp;&nbsp;•&nbsp;&nbsp;</span>
+    <a href=https://www.youtube.com/watch?v=fogCM159GRk>Paper</a>
+    <span>&nbsp;&nbsp;•&nbsp;&nbsp;</span>
+    <a href=https://github.com/LimHyungTae/patchwork/wiki>Project Wiki</a>
+  <br />
+  <br />
+  <div style="display: flex; justify-content: space-between;">
+      <img src="img/demo_kitti00_v2.gif" alt="animated" style="width: 49%;" />
+      <img src="img/demo_terrain_v3.gif" alt="animated" style="width: 49%;" />
+  </div>
+  <br />
+  Official page of *"Patchwork: Concentric Zone-based Region-wise Ground Segmentation with Ground Likelihood Estimation Using a 3D LiDAR Sensor"*, <br />
+  which is accepted by RA-L with IROS'21 option 
+</div>
 
-Official page of *"Patchwork: Concentric Zone-based Region-wise Ground Segmentation with Ground Likelihood Estimation Using a 3D LiDAR Sensor"*, which is accepted by RA-L with IROS'21 option 
-
-#### [[Video](https://youtu.be/rclqeDi4gow)] [[Preprint Paper](https://urserver.kaist.ac.kr/publicdata/patchwork/RA_L_21_patchwork_final_submission.pdf)] [[Project Wiki](https://github.com/LimHyungTae/patchwork/wiki)]
+---
 
 **IMPORTANT**: (Aug. 18th, 2024) I employ TBB, so its FPS is increased from **50 Hz** to **100 Hz**! 
 If you want to use the paper version of Patchwork for SOTA comparison purpose, Please use this [ground seg. benchmark code](https://github.com/url-kaist/Ground-Segmentation-Benchmark).
 
----
-## KITTI 00
-
-![](img/demo_kitti00_v2.gif)
-
-## Rough Terrain
-
-![](img/demo_terrain_v3.gif)
 
 Patchwork                  |  Concept of our method (CZM & GLE)
 :-------------------------:|:-------------------------:
@@ -47,8 +61,8 @@ Please kindly note that the concept of *traversable area* and *ground* is quite 
 ### Test Env.
 
 The code is tested successfully at
-* Linux 18.04 LTS
-* ROS Melodic
+* Linux 20.04 LTS
+* ROS Noetic
 
 ## Requirements
 
@@ -205,17 +219,6 @@ If you use our code or method in your work, please consider citing the following
     }
 
 ---------
-
-### Description
-
-All explanations of parameters and other experimental results will be uploaded in [wiki](https://github.com/LimHyungTae/patchwork/wiki)
-
-### Contact
-
-If you have any questions, please let me know:
-
-- Hyungtae Lim (`shapelim at kaist dot ac dot kr`)
-
 
 --- 
 
