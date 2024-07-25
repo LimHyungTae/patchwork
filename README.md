@@ -16,8 +16,8 @@
   <br />
   <br />
   <div style="display: flex; justify-content: space-between; width: 100%;">
-      <img src="img/demo_kitti00_v2.gif" alt="animated" style="width: 45%;" />
-      <img src="img/demo_terrain_v3.gif" alt="animated" style="width: 45%;" />
+      <img src="img/demo_kitti00_v2.gif" alt="animated" style="width: 90%;" />
+      <img src="img/demo_terrain_v3.gif" alt="animated" style="width: 90%;" />
   </div>
   <br />
   Official page of "Patchwork: Concentric Zone-based Region-wise Ground Segmentation <br />
