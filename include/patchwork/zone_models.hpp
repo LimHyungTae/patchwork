@@ -162,20 +162,33 @@ class ConcentricZoneModel : public ZoneModel {
             float ratio = (boundary_range - min_range_) / total_diff;
             boundary_ratios_.push_back(ratio);
         }
+
+        // This part is important! Without this line, a segmentation fault occurs.
+        // If you want to enlarge the max range, please modify `num_laser_channels_per_zone_` in `sensor_configs.hpp`.
+//        if (boundary_ranges_.back() < max_range_) {
+//            boundary_ranges_.push_back(max_range_);
+//            sqr_boundary_ranges_.push_back(max_range_ * max_range_);
+//            // Just copy the last value
+//            num_sectors_per_ring_.push_back(num_sectors_per_ring_.back());
+//        }
+
+        if (boundary_ranges_.back() < max_range_) {
+            std::cout << "\033[1;33m" << "Max range is shrinked: ";
+            std::cout << max_range_ << " -> " << boundary_ranges_.back() << "\033[0m" << std::endl;
+            sqr_max_range_ = boundary_ranges_.back() * boundary_ranges_.back();
+            max_range_     = boundary_ranges_.back();
+        }
     }
 
     inline void cout_params() {
         const auto &num_sectors_each_zone_ = sensor_config_.num_sectors_for_each_zone_;
         const auto &num_rings_each_zone_   = sensor_config_.num_rings_for_each_zone_;
 
-        std::cout
-            << (boost::format("Num. sectors: %d, %d, %d, %d") % num_sectors_each_zone_[0] % num_sectors_each_zone_[1] %
-                num_sectors_each_zone_[2] %
-                num_sectors_each_zone_[3]).str() << endl;
-        std::cout << (boost::format("Num. rings: %01d, %01d, %01d, %01d") % num_rings_each_zone_[0] %
-            num_rings_each_zone_[1] %
-            num_rings_each_zone_[2] %
-            num_rings_each_zone_[3]).str() << endl;
+         std::cout << "Boundary range: ";
+        for (const auto &range: boundary_ranges_) {
+            std::cout << range << " ";
+        }
+        std::cout << std::endl;
     }
 
     inline float xy2sqr_r(const float &x, const float &y) {
