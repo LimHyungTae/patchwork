@@ -11,6 +11,7 @@
 #include <pcl/common/centroid.h>
 #include <pcl/io/pcd_io.h>
 
+#include "zone_models.hpp"
 #include <tbb/parallel_for.h>
 #include <tbb/blocked_range.h>
 
@@ -95,6 +96,27 @@ struct PCAFeature {
     float    th_dist_d_;
     float    linearity_;
     float    planarity_;
+};
+
+template<typename PointT>
+struct Patch {
+    bool is_close_to_origin_ = false; // If so, we can set threshold more conservatively
+    int  ring_idx_           = NOT_ASSIGNED;
+    int  sector_idx_         = NOT_ASSIGNED;
+
+    int status_ = NOT_ASSIGNED;
+
+    PCAFeature feature_;
+
+    pcl::PointCloud<PointT> cloud_;
+    pcl::PointCloud<PointT> ground_;
+    pcl::PointCloud<PointT> non_ground_;
+
+    void clear() {
+        if (!cloud_.empty()) cloud_.clear();
+        if (!ground_.empty()) ground_.clear();
+        if (!non_ground_.empty()) non_ground_.clear();
+    }
 };
 
 template<typename PointT>
