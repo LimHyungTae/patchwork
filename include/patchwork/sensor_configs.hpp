@@ -21,15 +21,17 @@ struct SensorConfig {
     float vertical_angular_resolution_;
     int   horizontal_resolution_;
 
+    /**
+     * Note: Only use-defined parameters are `num_laser_channels_per_zone_` and `num_sectors_for_each_zone_`
+     */
     SensorConfig(const string &sensor_name) {
         cout << "\033[1;32mTarget Sensor: " << sensor_name << "\033[0m" << endl;
         if (sensor_name == "VLP-16") { // For Kimera-Multi dataset
             // https://www.amtechs.co.jp/product/VLP-16-Puck.pdf
             num_laser_channels_per_zone_ = {{2, 1},
                                             {1, 1},
-                                            {1},
+                                            {1, 1},
                                             {1}};
-            num_rings_for_each_zone_     = {2, 2, 1, 1};
             num_sectors_for_each_zone_   = {16, 32, 56, 32};
             lower_fov_boundary_          = -15;
             vertical_angular_resolution_ = 2.0;
@@ -42,7 +44,6 @@ struct SensorConfig {
                                             {3, 2, 1, 1},
                                             {1, 1, 1},
                                             {1, 1, 1}};
-            num_rings_for_each_zone_     = {2, 4, 3, 3};
             num_sectors_for_each_zone_   = {16, 32, 56, 32};
             lower_fov_boundary_          = -30.67;
             vertical_angular_resolution_ = 1.33;
@@ -53,7 +54,6 @@ struct SensorConfig {
                                             { 4,  3, 2, 2},
                                             { 2,  2, 2, 1},
                                             { 1,  1, 1, 1, 1}};
-            num_rings_for_each_zone_     = {2, 4, 4, 5};
             num_sectors_for_each_zone_   = {16, 32, 56, 32};
             lower_fov_boundary_          = -24.8;
             vertical_angular_resolution_ = 0.4;
@@ -67,7 +67,6 @@ struct SensorConfig {
                                             {1, 1},
                                             {1},
                                             {1}};
-            num_rings_for_each_zone_     = {2, 2, 1, 1};
             num_sectors_for_each_zone_   = {16, 32, 56, 32};
             lower_fov_boundary_          = -16.6;
             vertical_angular_resolution_ = 2.075;
@@ -81,7 +80,6 @@ struct SensorConfig {
                                             { 3, 2, 1, 1},
                                             { 1, 1, 1},
                                             { 1, 1, 1}};
-            num_rings_for_each_zone_     = {2, 4, 3, 3};
             num_sectors_for_each_zone_   = {16, 32, 56, 32};
             lower_fov_boundary_          = -22.5;
             vertical_angular_resolution_ = 0.7;

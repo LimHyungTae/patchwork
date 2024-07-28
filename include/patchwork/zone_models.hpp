@@ -87,7 +87,7 @@ class ConcentricZoneModel : public ZoneModel {
         string SET_SAME_SIZES_OF_PARAMETERS = "Some parameters are wrong! the size of parameters should be same";
 
         int n_z = num_zones_;
-        int n_r = sensor_config_.num_rings_for_each_zone_.size();
+        int n_r = sensor_config_.num_laser_channels_per_zone_.size();
         int n_s = sensor_config_.num_sectors_for_each_zone_.size();
 
         if ((n_z != n_r) || (n_z != n_s) || (n_r != n_s)) {
@@ -101,8 +101,8 @@ class ConcentricZoneModel : public ZoneModel {
     inline void set_num_sectors_for_each_ring() {
         num_sectors_per_ring_.clear();
         int             count = 0;
-        for (const auto &num_rings : sensor_config_.num_rings_for_each_zone_) {
-            for (int j = 0; j < num_rings; ++j) {
+        for (const auto &channel_set : sensor_config_.num_laser_channels_per_zone_) {
+            for (int j = 0; j < channel_set.size(); ++j) {
                 num_sectors_per_ring_.push_back(sensor_config_.num_sectors_for_each_zone_[count]);
             }
             count++;
