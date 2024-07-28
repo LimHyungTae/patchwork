@@ -75,7 +75,8 @@ struct SensorConfig {
             // https://github.com/TixiaoShan/LIO-SAM/blob/master/config/params.yaml
             horizontal_resolution_       = 1024;
             num_channels_                = 16;
-        } else if (sensor_name == "OS1-64") {
+        // It's not thorough, yet once the cloud points are sufficiently dense, then it's fine
+        } else if (sensor_name == "OS1-64" || sensor_name == "OS1-128") {
             num_laser_channels_per_zone_ = {{12, 6},
                                             { 3, 2, 1, 1},
                                             { 1, 1, 1},

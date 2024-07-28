@@ -28,28 +28,6 @@ class ZoneModel {
     inline size_t size() const;
     // Important! 'virtual' is necessary to be declared in the base class
     // + the functions must be declared, i.e. {} is needed
-    virtual void set_parameters() {}
-
-//
-//  template<typename T>
-//  int loadCloud(size_t idx, pcl::PointCloud<T> &cloud) const {}
-//
-//  virtual void getGTLabeledScan(size_t i, pcl::PointCloud<pcl::PointXYZI>& cloud) {}
-//
-//  // Estimated labels are added
-//  virtual void getScanAndPose(size_t i, pcl::PointCloud<pcl::PointXYZI>& cloud, Eigen::Matrix4f &pose) {
-//    cout << "[DefaultLoader] Default getScanandPose is Loaded" << endl;
-//  }
-//
-//  virtual void loadEstGroundAndInstanceLabels(const int i, std::vector<uint32_t>& ground_label,
-//                                              std::vector<uint32_t>& instance_label) {}
-//
-//  virtual void assignLabels(const std::vector<uint32_t> ground_labels, const std::vector<uint32_t> instance_labels,
-//                            const float min_z_voi, const float max_z_voi,
-//                            pcl::PointCloud<pcl::PointXYZI>& src_cloud, uint32_t& max_instance) {}
-//
-//  virtual void testInheritance() { cout << "Test inheritance" << endl; }
-
 };
 
 class ConcentricZoneModel : public ZoneModel {
@@ -98,7 +76,8 @@ class ConcentricZoneModel : public ZoneModel {
         // For defensive programming
         if (tan(DEG2RAD(smallest_incidence_angle)) * sensor_height_ < min_range_) {
             cout << tan(DEG2RAD(smallest_incidence_angle)) * sensor_height_ << " vs " << min_range_ << endl;
-            throw invalid_argument("[NZM] The parameter `min_r` is wrong. Check your sensor height or min. range");
+            throw invalid_argument(
+                "\033[1;31m[CZM] The parameter `min_r` is wrong. Check your sensor height or min. range\033[0m");
         }
         sanity_check();
         set_sqr_boundary_ranges(sensor_height_, smallest_incidence_angle);
@@ -256,7 +235,6 @@ class ConcentricZoneModel : public ZoneModel {
         int sector_idx = get_sector_idx(x, y, ring_idx);
         return std::make_pair(ring_idx, sector_idx);
     }
-
 };
 
-#endif //PATCHWORK_SENSOR_CONFIG_HPP
+#endif //PATCHWORK_ZONE_MODEL_HPP

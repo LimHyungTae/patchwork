@@ -158,6 +158,9 @@ class PatchWork {
         condParam(nh, "verbose", verbose_, false);
 
         condParam(nh, "sensor_height", sensor_height_, 1.723, "");
+        condParam(nh, "sensor_model", sensor_model_, std::string("HDL-64E"), "");
+        zone_model_ = ConcentricZoneModel(sensor_model_, sensor_height_, min_range_, max_range_);
+
 
         condParam(nh, "ATAT/ATAT_ON", ATAT_ON_, false);
         condParam(nh, "ATAT/max_r_for_ATAT", max_r_for_ATAT_, 5.0);
@@ -170,7 +173,7 @@ class PatchWork {
         condParam(nh, "th_seeds", th_seeds_, 0.4);
         condParam(nh, "th_dist", th_dist_, 0.3);
         condParam(nh, "max_r", max_range_, 80.0);
-        condParam(nh, "min_r", min_range_, 2.7); // It indicates bodysize of the car.
+        condParam(nh, "min_r", min_range_, 2.7); // It should cover the body size of the car.
         condParam(nh, "uniform/num_rings", num_rings_, 30);
         condParam(nh, "uniform/num_sectors", num_sectors_, 108);
         condParam(nh, "uprightness_thr", uprightness_thr_, 0.5); // The larger, the more strict
@@ -201,8 +204,7 @@ class PatchWork {
         // CZM denotes 'Concentric Zone Model'. Please refer to our paper
         // 2024.07.28. I feel `num_zones_`, `num_sectors_each_zone_`, num_rings_each_zone_` are rarely fine-tuned.
         // So I've decided to provide predefined parameter sets for sensor types
-        condParam(nh, "sensor_model", sensor_model_, std::string("HDL-64E"));
-        zone_model_ = ConcentricZoneModel(sensor_model_, sensor_height_, min_range_, max_range_);
+
         condParam(nh, "czm/elevation_thresholds", elevation_thr_, {0.523, 0.746, 0.879, 1.125});
         condParam(nh, "czm/flatness_thresholds", flatness_thr_, {0.0005, 0.000725, 0.001, 0.001});
 
@@ -581,7 +583,7 @@ void PatchWork<PointT>::estimate_ground(
     if (initialized_ && ATAT_ON_) {
         estimate_sensor_height(cloud_in);
         initialized_ = false;
-        std::cout << "\033[1;32mComplete to estimate the sensor height: " << sensor_height_ << "\033[0m" << std::endl;
+        std::cout << "\033[1;32m=> Complete to estimate the sensor height: " << sensor_height_ << "\033[0m" << std::endl;
     }
 
     static double           start, end;
