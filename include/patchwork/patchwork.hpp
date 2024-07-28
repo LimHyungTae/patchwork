@@ -608,7 +608,6 @@ void PatchWork<PointT>::estimate_ground(
 
     // t1 = ros::Time::now().toSec();
     flush_patches(regionwise_patches_);
-
     pc2regionwise_patches(cloud_in_tmp, regionwise_patches_);
 
     ground.clear();
@@ -684,8 +683,10 @@ void PatchWork<PointT>::estimate_ground(
             nonground += regionwise_ground;
             nonground += regionwise_nonground;
         } else if (status == GLOBALLY_TOO_HIGH_ELEVATION) {
+            if (verbose_) {
             cout << "\033[1;33m[Global elevation] " << feat.mean_(2) << " > " << global_elevation_thr_
                  << "\033[0m\n";
+            }
             nonground += regionwise_ground;
             nonground += regionwise_nonground;
         } else if (status == TOO_HIGH_ELEVATION) {
@@ -738,6 +739,7 @@ void PatchWork<PointT>::estimate_ground(
         cloud_ROS.header.frame_id = frame_patchwork;
         RejectedCloudPub.publish(cloud_ROS);
     }
+    poly_list_.header.frame_id = frame_patchwork;
     PlanePub.publish(poly_list_);
 }
 
@@ -823,6 +825,7 @@ geometry_msgs::PolygonStamped PatchWork<PointT>::set_polygons(int ring_idx, int 
     const static auto             &boundary_ranges  = zone_model_.boundary_ranges_;
     int                           num_sectors       = zone_model_.num_sectors_per_ring_[ring_idx];
     geometry_msgs::PolygonStamped polygons;
+    polygons.header.frame_id = frame_patchwork;
     // Set point of polygon. Start from RL and ccw
     geometry_msgs::Point32        point;
     double                        sector_size       = 2.0 * M_PI / static_cast<double>(num_sectors);
