@@ -145,7 +145,12 @@ int main(int argc, char**argv) {
 // -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 //        If you want to save precision/recall in a text file, revise this part
 // -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
-        output_filename = "/home/shapelim/patchwork.txt";
+        const char* home_dir = std::getenv("HOME");
+        if (home_dir == nullptr) {
+            std::cerr << "Error: HOME environment variable not set." << std::endl;
+            return 1;
+        }
+        std::string output_filename = std::string(home_dir) + "/patchwork_quantitaive_results.txt";
         ofstream ground_output(output_filename, ios::app);
         ground_output << n << "," << time_taken << "," << precision << "," << recall << "," << precision_naive << "," << recall_naive;
         ground_output << std::endl;

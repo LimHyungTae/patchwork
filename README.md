@@ -43,10 +43,6 @@ It's an overall updated version of **R-GPF of ERASOR** [**[Code](https://github.
 
 ### Characteristics
 
-* Single hpp file (`include/patchwork/patchwork.hpp`)
-
-* Robust ground consistency
-
 As shown in the demo videos, our method shows the most promising robust performance compared with other state-of-the-art methods, especially, our method focuses on the little perturbation of precision/recall as shown in [this figure](img/seq_00_pr_zoom.pdf).
 
 Please kindly note that the concept of *traversable area* and *ground* is quite different! Please refer to our paper.
