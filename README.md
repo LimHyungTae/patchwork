@@ -162,7 +162,7 @@ rosbag play $YOUR_BAG_FILE_NAME$.bag
 ```
 
 <details> 
-  <summary>**Excercise in the [Kimera-Multi dataset](https://github.com/MIT-SPARK/Kimera-Multi-Data)**</summary>
+  <summary><strong>Exercise with the <a href="https://github.com/MIT-SPARK/Kimera-Multi-Data">Kimera-Multi dataset</a></strong></summary>
   For the Kimera-Multi dataset, you can use the following command:
 
   ```angular2html
