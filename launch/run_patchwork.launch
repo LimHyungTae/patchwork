@@ -1,5 +1,5 @@
 <launch>
-<rosparam command="load" file="$(find patchwork)/config/params.yaml" />
+<rosparam command="load" file="$(find patchwork)/config/params_kitti.yaml" />
 
 <arg name="is_kitti" default="true" />
 <param name="/is_kitti" type="bool" value="$(arg is_kitti)" />

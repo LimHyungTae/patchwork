@@ -7,5 +7,5 @@
 </node>
 <node name="rviz" pkg="rviz" type="rviz" args="-d $(find patchwork)/rviz/pub_for_legoloam_viz.rviz"/>
 
-<rosparam command="load" file="$(find patchwork)/config/params.yaml" />
+<rosparam command="load" file="$(find patchwork)/config/params_kitti.yaml" />
 </launch>

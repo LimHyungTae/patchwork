@@ -3,7 +3,7 @@
 #          So, it mostly have a positive value
 #          Note that if `patchwork/ATAT/ATAT_ON` is set to be true, the sensor_height is auto-calibrated
 sensor_height: 1.723
-
+sensor_model: "HDL-64E"
 # Extrinsics (Raw lidar coordinate -> Coordinate that is parallel to the X-Y plane of ground)
 # But, not in use
 extrinsic_trans: [0.0, 0.0, 0.0]
@@ -54,13 +54,6 @@ patchwork:
         num_rings: 16
         num_sectors: 54
     czm:
-        # Note that `num_zones` == size of `num_sectors_each_zone` == size of `num_rings_each_zone` == size of `min_ranges` - 1
-        # To divide zones, max_r, min_r, and min_ranges are utilized
-        num_zones: 4
-        num_sectors_each_zone: [16, 32 ,54, 32]
-        num_rings_each_zone: [2, 4, 4, 4]
-        # Note that `min_r` == `min_ranges_each_zone`[0]!
-        min_ranges_each_zone: [2.7, 12.3625, 22.025, 41.35]
         # 22.05.02 Update
         # For usability, the MEANING OF THE ELEVATION THRESHOLDS IS CHANGED!!!!
         # Original - the elevation w.r.t. to the sensor frame
