@@ -156,11 +156,8 @@ class PatchWork {
         // Init ROS related
         ROS_INFO("Inititalizing PatchWork...");
         condParam(nh, "verbose", verbose_, false);
-
         condParam(nh, "sensor_height", sensor_height_, 1.723, "");
         condParam(nh, "sensor_model", sensor_model_, std::string("HDL-64E"), "");
-        zone_model_ = ConcentricZoneModel(sensor_model_, sensor_height_, min_range_, max_range_);
-
 
         condParam(nh, "ATAT/ATAT_ON", ATAT_ON_, false);
         condParam(nh, "ATAT/max_r_for_ATAT", max_r_for_ATAT_, 5.0);
@@ -204,7 +201,6 @@ class PatchWork {
         // CZM denotes 'Concentric Zone Model'. Please refer to our paper
         // 2024.07.28. I feel `num_zones_`, `num_sectors_each_zone_`, num_rings_each_zone_` are rarely fine-tuned.
         // So I've decided to provide predefined parameter sets for sensor types
-
         condParam(nh, "czm/elevation_thresholds", elevation_thr_, {0.523, 0.746, 0.879, 1.125});
         condParam(nh, "czm/flatness_thresholds", flatness_thr_, {0.0005, 0.000725, 0.001, 0.001});
 
@@ -216,6 +212,7 @@ class PatchWork {
         ROS_INFO("Num. zones: %zu", zone_model_.num_zones_);
 
         // It equals to elevation_thr_.size()/flatness_thr_.size();
+        zone_model_ = ConcentricZoneModel(sensor_model_, sensor_height_, min_range_, max_range_);
         num_rings_of_interest_ = elevation_thr_.size();
 
         condParam(nh, "visualize", visualize_, true);
