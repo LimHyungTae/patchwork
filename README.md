@@ -139,8 +139,13 @@ Other important parameters are
 * If your environment is mostly flat, then turn on `using_global_elevation` as `true`.
 * Change `min_r`, `max_r`, and `evelation_thresholds` 
 
-2. Remap the topic of subscriber, i.g. modify remap line as follows:
+If you are unsure about the `sensor_height`, simply launch Patchwork and set the `sensor_height` value in the terminal as shown below.
 
+![sensorheight](img/sensor_height_issue.png)
+
+(For this reason, [here](https://github.com/LimHyungTae/patchwork/blob/ce0edf95a07600d3de3c23cf3c8c03a96116bef0/config/params_velodyne_vlp16.yaml#L1) we set the `sensor_height` as 0.6. A centimeter-level error is totally fine.)
+
+2. Remap the topic of subscriber, i.g. modify remap line as follows:
 ```
 <remap from="/patchwork/cloud" to="$YOUR_LIDAR_TOPIC_NAME$"/>
 ```
