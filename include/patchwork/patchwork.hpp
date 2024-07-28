@@ -156,8 +156,8 @@ class PatchWork {
         // Init ROS related
         ROS_INFO("Inititalizing PatchWork...");
         condParam(nh, "verbose", verbose_, false);
-
         condParam(nh, "sensor_height", sensor_height_, 1.723, "");
+        condParam(nh, "sensor_model", sensor_model_, std::string("HDL-64E"), "");
 
         condParam(nh, "ATAT/ATAT_ON", ATAT_ON_, false);
         condParam(nh, "ATAT/max_r_for_ATAT", max_r_for_ATAT_, 5.0);
@@ -170,7 +170,7 @@ class PatchWork {
         condParam(nh, "th_seeds", th_seeds_, 0.4);
         condParam(nh, "th_dist", th_dist_, 0.3);
         condParam(nh, "max_r", max_range_, 80.0);
-        condParam(nh, "min_r", min_range_, 2.7); // It indicates bodysize of the car.
+        condParam(nh, "min_r", min_range_, 2.7); // It should cover the body size of the car.
         condParam(nh, "uniform/num_rings", num_rings_, 30);
         condParam(nh, "uniform/num_sectors", num_sectors_, 108);
         condParam(nh, "uprightness_thr", uprightness_thr_, 0.5); // The larger, the more strict
@@ -201,8 +201,6 @@ class PatchWork {
         // CZM denotes 'Concentric Zone Model'. Please refer to our paper
         // 2024.07.28. I feel `num_zones_`, `num_sectors_each_zone_`, num_rings_each_zone_` are rarely fine-tuned.
         // So I've decided to provide predefined parameter sets for sensor types
-        condParam(nh, "sensor_model", sensor_model_, std::string("HDL-64E"));
-        zone_model_ = ConcentricZoneModel(sensor_model_, sensor_height_, min_range_, max_range_);
         condParam(nh, "czm/elevation_thresholds", elevation_thr_, {0.523, 0.746, 0.879, 1.125});
         condParam(nh, "czm/flatness_thresholds", flatness_thr_, {0.0005, 0.000725, 0.001, 0.001});
 
@@ -214,6 +212,7 @@ class PatchWork {
         ROS_INFO("Num. zones: %zu", zone_model_.num_zones_);
 
         // It equals to elevation_thr_.size()/flatness_thr_.size();
+        zone_model_ = ConcentricZoneModel(sensor_model_, sensor_height_, min_range_, max_range_);
         num_rings_of_interest_ = elevation_thr_.size();
 
         condParam(nh, "visualize", visualize_, true);
@@ -581,7 +580,7 @@ void PatchWork<PointT>::estimate_ground(
     if (initialized_ && ATAT_ON_) {
         estimate_sensor_height(cloud_in);
         initialized_ = false;
-        std::cout << "\033[1;32mComplete to estimate the sensor height: " << sensor_height_ << "\033[0m" << std::endl;
+        std::cout << "\033[1;32m=> Complete to estimate the sensor height: " << sensor_height_ << "\033[0m" << std::endl;
     }
 
     static double           start, end;
@@ -609,7 +608,6 @@ void PatchWork<PointT>::estimate_ground(
 
     // t1 = ros::Time::now().toSec();
     flush_patches(regionwise_patches_);
-
     pc2regionwise_patches(cloud_in_tmp, regionwise_patches_);
 
     ground.clear();
@@ -685,8 +683,10 @@ void PatchWork<PointT>::estimate_ground(
             nonground += regionwise_ground;
             nonground += regionwise_nonground;
         } else if (status == GLOBALLY_TOO_HIGH_ELEVATION) {
+            if (verbose_) {
             cout << "\033[1;33m[Global elevation] " << feat.mean_(2) << " > " << global_elevation_thr_
                  << "\033[0m\n";
+            }
             nonground += regionwise_ground;
             nonground += regionwise_nonground;
         } else if (status == TOO_HIGH_ELEVATION) {
@@ -739,6 +739,7 @@ void PatchWork<PointT>::estimate_ground(
         cloud_ROS.header.frame_id = frame_patchwork;
         RejectedCloudPub.publish(cloud_ROS);
     }
+    poly_list_.header.frame_id = frame_patchwork;
     PlanePub.publish(poly_list_);
 }
 
@@ -824,6 +825,7 @@ geometry_msgs::PolygonStamped PatchWork<PointT>::set_polygons(int ring_idx, int 
     const static auto             &boundary_ranges  = zone_model_.boundary_ranges_;
     int                           num_sectors       = zone_model_.num_sectors_per_ring_[ring_idx];
     geometry_msgs::PolygonStamped polygons;
+    polygons.header.frame_id = frame_patchwork;
     // Set point of polygon. Start from RL and ccw
     geometry_msgs::Point32        point;
     double                        sector_size       = 2.0 * M_PI / static_cast<double>(num_sectors);

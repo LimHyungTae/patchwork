@@ -1,0 +1,21 @@
+<launch>
+<rosparam command="load" file="$(find patchwork)/config/params_velodyne_vlp16.yaml" />
+
+<arg name="is_kitti" default="false" />
+<param name="/is_kitti" type="bool" value="$(arg is_kitti)" />
+
+<group if="$(eval arg('is_kitti'))">
+    <node name="$(anon rviz_kitti)" pkg="rviz" type="rviz" args="-d $(find patchwork)/rviz/patchwork_viz.rviz"/>
+</group>
+
+<group unless="$(eval arg('is_kitti'))">
+    <node name="$(anon rviz_kitti)" pkg="rviz" type="rviz" args="-d $(find patchwork)/rviz/patchwork_kimera_multi.rviz"/>
+</group>
+
+<node name="$(anon ros_kitti)" pkg="patchwork" type="ros_kitti" output="screen">
+<!--<node name="$(anon ros_kitti)" pkg="patchwork" type="ros_kitti" output="screen" launch-prefix="gdb &#45;&#45;args">-->
+    <remap from="/patchwork/cloud" to="/acl_jackal2/lidar_points"/>
+</node>
+
+
+</launch>

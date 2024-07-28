@@ -87,18 +87,21 @@ void callbackNode(const sensor_msgs::PointCloud2::ConstPtr &msg) {
 
     static double time_taken;
 
-    cout << "Operating patchwork..." << endl;
+    std::cout << "Operating patchwork..." << std::endl;
     PatchworkGroundSeg->estimate_ground(pc_curr, pc_ground, pc_non_ground, time_taken);
 
-    // Estimation
+    double hz = 1.0 / time_taken;
+    std::cout << "\033[1;32m" << msg->header.seq << "th| ";
+    std::cout << "Time takes " << std::fixed << std::setprecision(2) << time_taken *1000 << " ms";
+    std::cout << " (" << std::fixed << std::setprecision(2) << hz << " Hz). ";
+    std::cout << "# cloud: " << pc_curr.size() << " -> " << pc_ground.size() << "\033[0m" << std::endl;
+
     double precision, recall, precision_naive, recall_naive;
-    calculate_precision_recall(pc_curr, pc_ground, precision, recall);
-    calculate_precision_recall(pc_curr, pc_ground, precision_naive, recall_naive, false);
-
-    cout << "\033[1;32m" << msg->header.seq << "th, " << " takes : " << time_taken << " | " << pc_curr.size() << " -> " << pc_ground.size()
-         << "\033[0m" << endl;
-
-    cout << "\033[1;32m P: " << precision << " | R: " << recall << "\033[0m" << endl;
+    if (is_kitti) {
+        calculate_precision_recall(pc_curr, pc_ground, precision, recall);
+        calculate_precision_recall(pc_curr, pc_ground, precision_naive, recall_naive, false);
+        cout << "\033[1;32m P: " << precision << " | R: " << recall << "\033[0m" << endl;
+    }
 
 //    output_filename = "/home/shapelim/patchwork_debug.txt";
 //    ofstream sc_output(output_filename, ios::app);
@@ -139,6 +142,9 @@ void callbackNode(const sensor_msgs::PointCloud2::ConstPtr &msg) {
         TPPublisher.publish(cloud2msg(TP));
         FPPublisher.publish(cloud2msg(FP));
         FNPublisher.publish(cloud2msg(FN));
+
+        pub_score("p", precision);
+        pub_score("r", recall);
     } else {
         // Since other dataset has no labels,
         // so only estimated ground points / non-ground points are available
@@ -147,8 +153,6 @@ void callbackNode(const sensor_msgs::PointCloud2::ConstPtr &msg) {
         if (NonGroundPublisher.getNumSubscribers())
             NonGroundPublisher.publish(cloud2msg(pc_non_ground));
     }
-    pub_score("p", precision);
-    pub_score("r", recall);
 }
 
 int main(int argc, char **argv) {

@@ -28,28 +28,6 @@ class ZoneModel {
     inline size_t size() const;
     // Important! 'virtual' is necessary to be declared in the base class
     // + the functions must be declared, i.e. {} is needed
-    virtual void set_parameters() {}
-
-//
-//  template<typename T>
-//  int loadCloud(size_t idx, pcl::PointCloud<T> &cloud) const {}
-//
-//  virtual void getGTLabeledScan(size_t i, pcl::PointCloud<pcl::PointXYZI>& cloud) {}
-//
-//  // Estimated labels are added
-//  virtual void getScanAndPose(size_t i, pcl::PointCloud<pcl::PointXYZI>& cloud, Eigen::Matrix4f &pose) {
-//    cout << "[DefaultLoader] Default getScanandPose is Loaded" << endl;
-//  }
-//
-//  virtual void loadEstGroundAndInstanceLabels(const int i, std::vector<uint32_t>& ground_label,
-//                                              std::vector<uint32_t>& instance_label) {}
-//
-//  virtual void assignLabels(const std::vector<uint32_t> ground_labels, const std::vector<uint32_t> instance_labels,
-//                            const float min_z_voi, const float max_z_voi,
-//                            pcl::PointCloud<pcl::PointXYZI>& src_cloud, uint32_t& max_instance) {}
-//
-//  virtual void testInheritance() { cout << "Test inheritance" << endl; }
-
 };
 
 class ConcentricZoneModel : public ZoneModel {
@@ -98,7 +76,8 @@ class ConcentricZoneModel : public ZoneModel {
         // For defensive programming
         if (tan(DEG2RAD(smallest_incidence_angle)) * sensor_height_ < min_range_) {
             cout << tan(DEG2RAD(smallest_incidence_angle)) * sensor_height_ << " vs " << min_range_ << endl;
-            throw invalid_argument("[NZM] The parameter `min_r` is wrong. Check your sensor height or min. range");
+            throw invalid_argument(
+                "\033[1;31m[CZM] The parameter `min_r` is wrong. Check your sensor height or min. range\033[0m");
         }
         sanity_check();
         set_sqr_boundary_ranges(sensor_height_, smallest_incidence_angle);
@@ -108,7 +87,7 @@ class ConcentricZoneModel : public ZoneModel {
         string SET_SAME_SIZES_OF_PARAMETERS = "Some parameters are wrong! the size of parameters should be same";
 
         int n_z = num_zones_;
-        int n_r = sensor_config_.num_rings_for_each_zone_.size();
+        int n_r = sensor_config_.num_laser_channels_per_zone_.size();
         int n_s = sensor_config_.num_sectors_for_each_zone_.size();
 
         if ((n_z != n_r) || (n_z != n_s) || (n_r != n_s)) {
@@ -122,8 +101,8 @@ class ConcentricZoneModel : public ZoneModel {
     inline void set_num_sectors_for_each_ring() {
         num_sectors_per_ring_.clear();
         int             count = 0;
-        for (const auto &num_rings : sensor_config_.num_rings_for_each_zone_) {
-            for (int j = 0; j < num_rings; ++j) {
+        for (const auto &channel_set : sensor_config_.num_laser_channels_per_zone_) {
+            for (int j = 0; j < channel_set.size(); ++j) {
                 num_sectors_per_ring_.push_back(sensor_config_.num_sectors_for_each_zone_[count]);
             }
             count++;
@@ -183,20 +162,33 @@ class ConcentricZoneModel : public ZoneModel {
             float ratio = (boundary_range - min_range_) / total_diff;
             boundary_ratios_.push_back(ratio);
         }
+
+        // This part is important! Without this line, a segmentation fault occurs.
+        // If you want to enlarge the max range, please modify `num_laser_channels_per_zone_` in `sensor_configs.hpp`.
+//        if (boundary_ranges_.back() < max_range_) {
+//            boundary_ranges_.push_back(max_range_);
+//            sqr_boundary_ranges_.push_back(max_range_ * max_range_);
+//            // Just copy the last value
+//            num_sectors_per_ring_.push_back(num_sectors_per_ring_.back());
+//        }
+
+        if (boundary_ranges_.back() < max_range_) {
+            std::cout << "\033[1;33m" << "Max range is shrinked: ";
+            std::cout << max_range_ << " -> " << boundary_ranges_.back() << "\033[0m" << std::endl;
+            sqr_max_range_ = boundary_ranges_.back() * boundary_ranges_.back();
+            max_range_     = boundary_ranges_.back();
+        }
     }
 
     inline void cout_params() {
         const auto &num_sectors_each_zone_ = sensor_config_.num_sectors_for_each_zone_;
         const auto &num_rings_each_zone_   = sensor_config_.num_rings_for_each_zone_;
 
-        std::cout
-            << (boost::format("Num. sectors: %d, %d, %d, %d") % num_sectors_each_zone_[0] % num_sectors_each_zone_[1] %
-                num_sectors_each_zone_[2] %
-                num_sectors_each_zone_[3]).str() << endl;
-        std::cout << (boost::format("Num. rings: %01d, %01d, %01d, %01d") % num_rings_each_zone_[0] %
-            num_rings_each_zone_[1] %
-            num_rings_each_zone_[2] %
-            num_rings_each_zone_[3]).str() << endl;
+         std::cout << "Boundary range: ";
+        for (const auto &range: boundary_ranges_) {
+            std::cout << range << " ";
+        }
+        std::cout << std::endl;
     }
 
     inline float xy2sqr_r(const float &x, const float &y) {
@@ -256,7 +248,6 @@ class ConcentricZoneModel : public ZoneModel {
         int sector_idx = get_sector_idx(x, y, ring_idx);
         return std::make_pair(ring_idx, sector_idx);
     }
-
 };
 
-#endif //PATCHWORK_SENSOR_CONFIG_HPP
+#endif //PATCHWORK_ZONE_MODEL_HPP

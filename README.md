@@ -49,7 +49,7 @@ Please kindly note that the concept of *traversable area* and *ground* is quite 
 
 ---
 
-## Contents
+## :open_file_folder: Contents
 0. [Test Env.](#Test-Env.)
 0. [Requirements](#requirements)
 0. [How to Run Patchwork](#How-to-Run-Patchwork)
@@ -61,7 +61,7 @@ The code is tested successfully at
 * Linux 20.04 LTS
 * ROS Noetic
 
-## Requirements
+## :package: Prerequisite Installation
 
 ### ROS Setting
 - 1. Install [ROS](http://torch.ch/docs/getting-started.html) on a machine. 
@@ -86,7 +86,7 @@ git clone https://github.com/LimHyungTae/patchwork.git
 cd .. && catkin build patchwork 
 ```
 
-## How to Run Patchwork
+## :gear: How to Run Patchwork
 
 We provide four examples:
 
@@ -98,7 +98,7 @@ We provide four examples:
     * Offline by loading pcd files
     * Online (ROS Callback) using your ROS bag file
 
-### Offline KITTI dataset
+### :chart_with_upwards_trend: Offline KITTI dataset
 
 1. Download [SemanticKITTI](http://www.semantic-kitti.org/dataset.html#download) Odometry dataset (We also need labels since we also open the evaluation code! :)
 
@@ -129,30 +129,62 @@ roslaunch patchwork offline_kitti.launch
 
 You can directly feel the speed of Patchwork! :wink:
 
-### Online (ROS Callback) KITTI dataset
+### :runner: Online (via your ROS bag file)
 
-We also provide rosbag example. If you run our patchwork via rosbag, please refer to this example.
+It is easy by re-using `run_patchwork.launch`.
 
-1. After building this package, run the roslaunch as follows:
+1. First, set your parameter file in `/config` folder and set `sensor_height` and `sensor_model` appropriately.
+Other important parameters are
+* If you feel too many below parts of non-ground points are considered as ground, lower `th_seeds` and `th_dist`.
+* If your environment is mostly flat, then turn on `using_global_elevation` as `true`.
+* Change `min_r`, `max_r`, and `evelation_thresholds` 
+
+2. Remap the topic of subscriber, i.g. modify remap line as follows:
 
 ```
-roslaunch patchwork run_patchwork.launch is_kitti:=true
+<remap from="/patchwork/cloud" to="$YOUR_LIDAR_TOPIC_NAME$"/>
 ```
 
-Then you can see the below message:
+Note that the type subscribed data is `sensor_msgs::PointCloud2`.
 
-![](/img/kitti_activated.png)
+3. Next, launch the roslaunch file as follows:
 
-2. Set the `data_path` in `launch/kitti_publisher.launch` for your machine, which is same with the aforementioned parameter in "Offline KITTI dataset" part. 
+```
+roslaunch patchwork run_patchwork.launch is_kitti:=false
+```
 
-3. Then, run ros player (please refer to `nodes/ros_kitti_publisher.cpp`) by following command at another terminal window:
+Note that `is_kitti=false` is important! Because it decides which rviz is opened. The rviz shows only estimated ground and non-ground because your own dataset may have no point-wise labels.
+
+4. Then play your bag file!
  
 ```
-roslaunch patchwork kitti_publisher.launch
+rosbag play $YOUR_BAG_FILE_NAME$.bag
 ```
 
+<details> 
+  <summary>**Excercise in the [Kimera-Multi dataset](https://github.com/MIT-SPARK/Kimera-Multi-Data)**</summary>
+  For the Kimera-Multi dataset, you can use the following command:
 
-### Own dataset using pcd files
+  ```angular2html
+    roslaunch patchwork run_patchwork_kimera_multi.launch 
+  ```
+
+  Then, play the bag file as follows:
+
+  ```angular2html
+    rosbag play 10_14_acl_jackal2.bag
+  ```
+
+  <div style="display: flex; justify-content: space-between; width: 100%;">
+        <img src="img/kimera-multi.gif" alt="animated" style="width: 90%;" />
+  </div>
+
+  Even though points are very sparse, Patchwork just works well!
+</details>
+
+---
+
+### :mag: Own dataset using pcd files
 
 Please refer to `/nodes/offilne_own_data.cpp`. 
 
@@ -166,7 +198,6 @@ W/ wrong params            | After setting right params
 
 For better understanding of the parameters of Patchwork, please read [our wiki, 4. IMPORTANT: Setting Parameters of Patchwork in Your Own Env.](https://github.com/LimHyungTae/patchwork/wiki/4.-IMPORTANT:-Setting-Parameters-of-Patchwork-in-Your-Own-Env.).
 
-
 #### Offline (Using *.pcd or *.bin file)
 
 1. Utilize `/nodes/offilne_own_data.cpp`
@@ -178,31 +209,6 @@ For better understanding of the parameters of Patchwork, please read [our wiki, 
 roslaunch patchwork offline_ouster128.launch
 ```
 
-#### Online (via your ROS bag file)
-
-It is easy by re-using `run_patchwork.launch`.
-
-1. Remap the topic of subscriber, i.g. modify remap line as follows:
-
-```
-<remap from="/patchwork/cloud" to="$YOUR_LIDAR_TOPIC_NAME$"/>
-```
-
-Note that the type subscribed data is `sensor_msgs::PointCloud2`.
-
-2. Next, launch the roslaunch file as follows:
-
-```
-roslaunch patchwork run_patchwork.launch is_kitti:=false
-```
-
-Note that `is_kitti=false` is important! Because it decides which rviz is opened. The rviz shows only estimated ground and non-ground because your own dataset may have no point-wise labels.
-
-3. Then play your bag file!
- 
-```
-rosbag play $YOUR_BAG_FILE_NAME$.bag
-```
 
 ## Citation
 
