@@ -1,5 +1,5 @@
 <launch>
-<rosparam command="load" file="$(find patchwork)/config/params_velodyne_vlp16.yaml" />
+<rosparam command="load" file="$(find patchwork)/config/params_ouster64.yaml" />
 
 <arg name="is_kitti" default="false" />
 <param name="/is_kitti" type="bool" value="$(arg is_kitti)" />
@@ -14,7 +14,8 @@
 
 <node name="$(anon ros_kitti)" pkg="patchwork" type="ros_kitti" output="screen">
 <!--<node name="$(anon ros_kitti)" pkg="patchwork" type="ros_kitti" output="screen" launch-prefix="gdb &#45;&#45;args">-->
-    <remap from="/patchwork/cloud" to="/acl_jackal2/lidar_points"/>
+    <!-- <remap from="/patchwork/cloud" to="/apis/lidar_points"/> -->
+    <remap from="/patchwork/cloud" to="/apis/locus/cloud_registered_lidar"/>
 </node>
 
 

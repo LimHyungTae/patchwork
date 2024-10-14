@@ -1,4 +1,4 @@
-# 22.05.02 Update 
+# 22.05.02 Update
 #          `sensor_height` denotes the elevation of the origin of the point cloud "with respect to the ground"
 #          So, it mostly have a positive value
 #          Note that if `patchwork/ATAT/ATAT_ON` is set to be true, the sensor_height is auto-calibrated
@@ -11,7 +11,7 @@ extrinsic_rot: [1, 0, 0,
                0, 1, 0,
                0, 0, 1]
 patchwork:
-    mode: "czm" 
+    mode: "czm"
     verbose: false  # To check effect of uprightness/elevation/flatness
     visualize: true # Ground Likelihood Estimation is visualized
     # Ground Plane Fitting parameters
@@ -28,7 +28,7 @@ patchwork:
     # For reject points caused by reflection or multipath problems.
     # it should be lower than -1.0
     adaptive_seed_selection_margin: -1.1
-    
+
     # It is not in the paper
     # It is also not matched our philosophy, but it is employed to reject some FPs easily & intuitively.
     # For patchwork, the global elevation threshold is only applied on Z3 and Z4
@@ -36,12 +36,12 @@ patchwork:
     # W.r.t sensor frame (That is, if it is 0.0, then the candidates whose z is higher than z height of 3D LiDAR sensor are rejected
     global_elevation_threshold: -0.5
 
-    # 22.05.02 Update 
+    # 22.05.02 Update
     # ATAT is the abbrev. for All-Terrain Automatic heighT estimator
     # It automatically corrects the wrong sensor height input
     ATAT:
         ATAT_ON: true
-        # 22.05.02 Update 
+        # 22.05.02 Update
         # IMPORTANT - `max_r_for_ATAT` affects the quality of the estimation of sensor height
         # If it is too large, then the z-elevation values of the bins become more ambiguous
         # If it is too small, there is a potential risk that does not include the cloud points in the vicinity of the vehicles/mobile robots
@@ -63,6 +63,3 @@ patchwork:
         # That is, if the z-elevation of the bin is higher than -1.2, then the cloud points from the bin are rejected
         elevation_thresholds:  [0.523, 0.746, 0.879, 1.125] # For elevation. The size should be equal to flatness_thresholds vector
         flatness_thresholds:  [0.0005, 0.000725, 0.001, 0.001]  # For flatness. The size should be equal to elevation_thresholds vector
-         
-
-

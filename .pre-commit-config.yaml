@@ -1,0 +1,36 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+      - id: check-yaml
+      - id: check-json
+      - id: check-xml
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: check-added-large-files
+      - id: check-merge-conflict
+
+  - repo: https://github.com/psf/black
+    rev: "23.7.0"
+    hooks:
+      - id: black
+
+  # - repo: https://github.com/pylint-dev/pylint
+  #   rev: "v3.0.0a6"
+  #   hooks:
+  #     - id: pylint
+
+  - repo: https://github.com/pre-commit/mirrors-clang-format
+    rev: "v16.0.6"
+    hooks:
+      - id: clang-format
+
+  - repo: https://github.com/cpplint/cpplint
+    rev: "1.6.1"
+    hooks:
+      - id: cpplint
+        args:
+          [
+            "--filter=-whitespace/line_length,-legal/copyright,-build/include_order,-runtime/references,-build/c++11,-build/namespaces,-build/header_guard,-runtime/string",
+          ]
+        exclude: '3rd_party/|include/label_generator/nanoflann\.hpp|include/label_generator/nanoflann_utils\.hpp'

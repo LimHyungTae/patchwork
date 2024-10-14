@@ -1,7 +1,7 @@
 <launch>
 
 <node name="$(anon pub_for_legoloam)" pkg="patchwork" type="pub_for_legoloam" output="screen">
-<rosparam param="/algorithm">"patchwork"</rosparam> 
+<rosparam param="/algorithm">"patchwork"</rosparam>
 <rosparam param="/seq">"00"</rosparam>
 <remap from="/node" to="/velodyne_points"/>
 </node>
