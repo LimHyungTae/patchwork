@@ -82,8 +82,13 @@ void callbackNode(const sensor_msgs::PointCloud2::ConstPtr &msg) {
     pcl::PointCloud<PointType> pc_curr = cloudmsg2cloud<PointType>(*msg);
     pcl::PointCloud<PointType> pc_ground;
     pcl::PointCloud<PointType> pc_non_ground;
+    pcl::PointCloud<PointType> pc_labeled;
     pc_ground.header = pc_curr.header;
     pc_non_ground.header = pc_curr.header;
+    pc_labeled.header = pc_curr.header;
+    pc_ground.reserve(pc_curr.size());
+    pc_non_ground.reserve(pc_curr.size());
+    pc_labeled.reserve(pc_curr.size());
 
     static double time_taken;
 
@@ -133,7 +138,7 @@ void callbackNode(const sensor_msgs::PointCloud2::ConstPtr &msg) {
             std::string count_str_padded = std::string(NUM_ZEROS - count_str.length(), '0') + count_str;
             std::string pcd_filename = pcd_savepath + "/" + count_str_padded + ".pcd";
 
-//    pc2pcdfile(TP, FP, FN, TN, pcd_filename);
+        // pc2pcdfile(TP, FP, FN, TN, pcd_filename);
         }
     }
 
@@ -152,6 +157,22 @@ void callbackNode(const sensor_msgs::PointCloud2::ConstPtr &msg) {
             GroundPublisher.publish(cloud2msg(pc_ground));
         if (NonGroundPublisher.getNumSubscribers())
             NonGroundPublisher.publish(cloud2msg(pc_non_ground));
+
+        int num_g  = pc_ground.points.size();
+        int num_ng = pc_non_ground.points.size(); 
+        for (int i = 0; i < num_g; ++i) {
+            auto pt = pc_ground.points[i];
+            pt.label = 1;
+            pc_labeled.emplace_back(pt);
+        }
+
+        for (int j = 0; j < num_ng; ++j) {
+            auto pt = pc_non_ground.points[j];
+            pt.label = 0;
+            pc_labeled.emplace_back(pt);
+        }
+
+        LabeledCloudPublisher.publish(cloud2msg(pc_labeled));
     }
 }
 
@@ -163,6 +184,8 @@ int main(int argc, char **argv) {
     condParam<bool>(&nh, "/is_kitti", is_kitti, true,"");
 
     PatchworkGroundSeg.reset(new PatchWork<PointType>(&nh));
+
+    LabeledCloudPublisher  = nh.advertise<sensor_msgs::PointCloud2>("/benchmark/labeled_cloud", 100, true);
 
     CloudPublisher  = nh.advertise<sensor_msgs::PointCloud2>("/benchmark/cloud", 100, true);
     TPPublisher     = nh.advertise<sensor_msgs::PointCloud2>("/benchmark/TP", 100, true);
