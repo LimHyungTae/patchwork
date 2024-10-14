@@ -70,7 +70,7 @@ POINT_CLOUD_REGISTER_POINT_STRUCT(PointXYZILID,
                                   (std::uint16_t, id, id))
 
 
-void PointXYZILID2XYZI(pcl::PointCloud<PointXYZILID>& src,
+void PointT2XYZI(pcl::PointCloud<PointXYZILID>& src,
                        pcl::PointCloud<pcl::PointXYZI>::Ptr dst){
   dst->points.clear();
   for (const auto &pt: src.points){
@@ -86,7 +86,8 @@ std::vector<int> outlier_classes = {UNLABELED, OUTLIER};
 std::vector<int> ground_classes = {ROAD, PARKING, SIDEWALKR, OTHER_GROUND, LANE_MARKING, VEGETATION, TERRAIN};
 std::vector<int> ground_classes_except_terrain = {ROAD, PARKING, SIDEWALKR, OTHER_GROUND, LANE_MARKING};
 
-int count_num_ground(const pcl::PointCloud<PointXYZILID>& pc){
+template <typename PointT>
+int count_num_ground(const pcl::PointCloud<PointT>& pc){
   int num_ground = 0;
 
   std::vector<int>::iterator iter;
@@ -112,7 +113,8 @@ std::map<int, int> set_initial_gt_counts(std::vector<int>& gt_classes){
   return gt_counts;
 }
 
-std::map<int, int> count_num_each_class(const pcl::PointCloud<PointXYZILID>& pc){
+template <typename PointT>
+std::map<int, int> count_num_each_class(const pcl::PointCloud<PointT>& pc){
   auto gt_counts = set_initial_gt_counts(ground_classes);
   std::vector<int>::iterator iter;
 
@@ -129,7 +131,8 @@ std::map<int, int> count_num_each_class(const pcl::PointCloud<PointXYZILID>& pc)
   return gt_counts;
 }
 
-int count_num_outliers(const pcl::PointCloud<PointXYZILID>& pc){
+template <typename PointT>
+int count_num_outliers(const pcl::PointCloud<PointT>& pc){
   int num_outliers = 0;
 
   std::vector<int>::iterator iter;
@@ -143,8 +146,13 @@ int count_num_outliers(const pcl::PointCloud<PointXYZILID>& pc){
   return num_outliers;
 }
 
+template <typename PointT>
+void discern_ground(const pcl::PointCloud<PointT>& src, pcl::PointCloud<PointT>& ground, pcl::PointCloud<PointT>& non_ground){
+  // Ensure that PointT is PointT because this function only works in the SemanticKITTI
+  if (!std::is_same<PointT, PointXYZILID>::value) {
+    throw invalid_argument("This function only supports `PointT`. Not implemented for this point type.");
+  }
 
-void discern_ground(const pcl::PointCloud<PointXYZILID>& src, pcl::PointCloud<PointXYZILID>& ground, pcl::PointCloud<PointXYZILID>& non_ground){
   ground.clear();
   non_ground.clear();
   std::vector<int>::iterator iter;
@@ -163,12 +171,16 @@ void discern_ground(const pcl::PointCloud<PointXYZILID>& src, pcl::PointCloud<Po
   }
 }
 
-
-void calculate_precision_recall(const pcl::PointCloud<PointXYZILID>& pc_curr,
-                                pcl::PointCloud<PointXYZILID>& ground_estimated,
+template <typename PointT>
+void calculate_precision_recall(const pcl::PointCloud<PointT>& pc_curr,
+                                pcl::PointCloud<PointT>& ground_estimated,
                                 double & precision,
                                 double& recall,
                                 bool consider_outliers=true){
+  // Ensure that PointT is PointT because this function only works in the SemanticKITTI
+  if (!std::is_same<PointT, PointXYZILID>::value) {
+    throw invalid_argument("This function only supports `PointT`. Not implemented for this point type.");
+  }
 
   int num_ground_est = ground_estimated.points.size();
   int num_ground_gt = count_num_ground(pc_curr);
@@ -183,7 +195,8 @@ void calculate_precision_recall(const pcl::PointCloud<PointXYZILID>& pc_curr,
   }
 }
 
-void save_all_labels(const pcl::PointCloud<PointXYZILID>& pc, string ABS_DIR, string seq, int count){
+template <typename PointT>
+void save_all_labels(const pcl::PointCloud<PointT>& pc, string ABS_DIR, string seq, int count){
 
   std::string count_str = std::to_string(count);
   std::string count_str_padded = std::string(NUM_ZEROS - count_str.length(), '0') + count_str;
@@ -238,10 +251,14 @@ void save_all_labels(const pcl::PointCloud<PointXYZILID>& pc, string ABS_DIR, st
   sc_output.close();
 }
 
-void save_all_accuracy(const pcl::PointCloud<PointXYZILID>& pc_curr,
-                      pcl::PointCloud<PointXYZILID>& ground_estimated, string acc_filename,
+template <typename PointT>
+void save_all_accuracy(const pcl::PointCloud<PointT>& pc_curr,
+                      pcl::PointCloud<PointT>& ground_estimated, string acc_filename,
                       double& accuracy, map<int, int>&pc_curr_gt_counts, map<int, int>&g_est_gt_counts){
-
+  // Ensure that PointT is PointT because this function only works in the SemanticKITTI
+  if (!std::is_same<PointT, PointXYZILID>::value) {
+    throw invalid_argument("This function only supports `PointT`. Not implemented for this point type.");
+  }
 
 //  std::cout<<"debug: "<<acc_filename<<std::endl;
   ofstream sc_output2(acc_filename, ios::app);
@@ -270,8 +287,9 @@ void save_all_accuracy(const pcl::PointCloud<PointXYZILID>& pc_curr,
   sc_output2.close();
 }
 
-void pc2pcdfile(const pcl::PointCloud<PointXYZILID>& TP, const pcl::PointCloud<PointXYZILID>& FP,
-                const pcl::PointCloud<PointXYZILID>& FN, const pcl::PointCloud<PointXYZILID>& TN,
+template <typename PointT>
+void pc2pcdfile(const pcl::PointCloud<PointT>& TP, const pcl::PointCloud<PointT>& FP,
+                const pcl::PointCloud<PointT>& FN, const pcl::PointCloud<PointT>& TN,
                 std::string pcd_filename){
   pcl::PointCloud<pcl::PointXYZI> pc_out;
 
@@ -302,8 +320,6 @@ void pc2pcdfile(const pcl::PointCloud<PointXYZILID>& TP, const pcl::PointCloud<P
   pc_out.width = pc_out.points.size();
   pc_out.height = 1;
   pcl::io::savePCDFileASCII(pcd_filename, pc_out);
-
 }
-
 
 #endif
