@@ -1,0 +1,75 @@
+# 22.05.02 Update 
+#          `sensor_height` denotes the elevation of the origin of the point cloud "with respect to the ground"
+#          So, it mostly have a positive value
+#          Note that if `patchwork/ATAT/ATAT_ON` is set to be true, the sensor_height is auto-calibrated
+#          Nevertheless, the `sensor_height` should be set appropriately!
+sensor_height: 0.7
+save_flag: false
+sensor_model: "OS1-64"
+
+# Extrinsics (Raw lidar coordinate -> Coordinate that is parallel to the X-Y plane of ground)
+# But, not in use
+extrinsic_trans: [0.0, 0.0, 0.0]
+extrinsic_rot: [1, 0, 0,
+               0, 1, 0,
+               0, 0, 1]
+patchwork:
+    mode: "czm" 
+    verbose: false # To check effect of uprightness/elevation/flatness
+    visualize: true # Ground Likelihood Estimation is visualized
+    # Ground Plane Fitting parameters
+    num_iter: 3
+    num_lpr: 20
+    num_min_pts: 10
+    th_seeds: 0.3
+    th_dist: 0.125
+    max_r: 80.0
+    min_r: 1.0 # to consider vicinity of mobile plot form.
+    uprightness_thr: 0.707 # For uprightness. 45: 0.707 / 60: 0.866. The larger, the more conservative
+
+    # The points below the adaptive_seed_selection_margin * sensor_height are filtered
+    # Tor rejecti points caused by reflection or multipath problems.
+    # it should be lower than -1.0
+    adaptive_seed_selection_margin: -1.1
+    
+    # It is not in the paper
+    # It is also not matched our philosophy, but it is employed to reject some FPs easily & intuitively.
+    # For patchwork, the global elevation threshold is only applied on Z3 and Z4
+    using_global_elevation: true
+    # W.r.t sensor frame (That is, if it is 0.0, then the candidates whose z is higher than z height of 3D LiDAR sensor are rejected
+    global_elevation_threshold: -0.25
+    
+    # 22.05.02 Update 
+    # ATAT is the abbrev. for All-Terrain Automatic heighT estimator
+    # It automatically corrects the wrong sensor height input
+    ATAT:
+        ATAT_ON: true
+        # 22.05.02 Update 
+        # IMPORTANT - `max_r_for_ATAT` affects the quality of the estimation of sensor height
+        # If it is too large, then the z-elevation values of the bins become more ambiguous
+        # If it is too small, there is a potential risk that does not include the cloud points in the vicinity of the vehicles/mobile robots
+        # Therefore, it should be set appropriately!
+        max_r_for_ATAT: 5.0
+        num_sectors_for_ATAT: 20
+        noise_bound: 0.2
+
+    uniform: # deprecated
+        num_rings: 16
+        num_sectors: 54
+    czm:
+        # Note that `num_zones` == size of `num_sectors_each_zone` == size of `num_rings_each_zone` == size of `min_ranges` - 1
+        # To divide zones, max_r, min_r, and min_ranges are utilized
+        num_zones: 4
+        num_sectors_each_zone: [16, 32 ,54, 32]
+        num_rings_each_zone: [2, 4, 4, 4]
+        # Note that `min_r` == `min_ranges_each_zone`[0]!
+        min_ranges_each_zone: [2.7, 12.3625, 22.025, 41.35]
+        # The elevation_thresholds are with respect to the sensor frame
+        # Thus, actually (sensor_height - threshold_value) is the maximum ground height.
+        # For instance, for the first ring, 1.723 - 1.2 = 0.523 is acceptable, maximum ground height
+        # Note that the size of below parameters are indepentent to `num_zones`!
+        elevation_thresholds:  [0.175, 0.175, 0.20, 0.25] # For elevation. The size should be equal to flatness_thresholds vector
+        flatness_thresholds:  [0.0, 0.000125, 0.000185, 0.000185]  # For flatness. The size should be equal to elevation_thresholds vector
+         
+
+
