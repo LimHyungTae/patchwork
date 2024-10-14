@@ -2,14 +2,16 @@
 // Created by shapelim on 22. 10. 23.
 //
 
-#ifndef PATCHWORK_ZONE_MODEL_HPP
-#define PATCHWORK_ZONE_MODEL_HPP
+#ifndef INCLUDE_PATCHWORK_ZONE_MODELS_HPP_
+#define INCLUDE_PATCHWORK_ZONE_MODELS_HPP_
 
+#include <algorithm>
 #include <iostream>
+#include <string>
+#include <utility>
 #include <vector>
 
 #include "patchwork/sensor_configs.hpp"
-#include "sensor_configs.hpp"
 
 #define INVALID_RING_IDX -1
 #define OVERFLOWED_IDX -2
@@ -255,4 +257,4 @@ class ConcentricZoneModel : public ZoneModel {
   }
 };
 
-#endif  // PATCHWORK_ZONE_MODEL_HPP
+#endif  // INCLUDE_PATCHWORK_ZONE_MODELS_HPP_

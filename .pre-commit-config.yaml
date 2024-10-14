@@ -31,6 +31,6 @@ repos:
       - id: cpplint
         args:
           [
-            "--filter=-whitespace/line_length,-legal/copyright,-build/include_order,-runtime/references,-build/c++11,-build/namespaces",
+            "--filter=-whitespace/line_length,-legal/copyright,-build/include_order,-runtime/references,-build/c++11,-build/namespaces,-build/header_guard,-runtime/string",
           ]
-        exclude: 3rd_party/
+        exclude: '3rd_party/|include/label_generator/nanoflann\.hpp|include/label_generator/nanoflann_utils\.hpp'

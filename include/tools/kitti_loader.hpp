@@ -1,6 +1,9 @@
 //
 // Created by shapelim on 6/23/21.
 //
+#include <string>
+#include <vector>
+
 #include "patchwork/utils.hpp"
 
 #ifndef PATCHWORK_PCD_LOADER_HPP
@@ -8,7 +11,7 @@
 
 class KittiLoader {
  public:
-  KittiLoader(const std::string &abs_path) {
+  explicit KittiLoader(const std::string &abs_path) {
     pc_path_ = abs_path + "/velodyne";
     label_path_ = abs_path + "/labels";
 
@@ -78,7 +81,7 @@ class KittiLoader {
       }
       label_input.seekg(0, std::ios::beg);
       std::vector<uint32_t> labels(num_points);
-      label_input.read((char *)&labels[0], num_points * sizeof(uint32_t));
+      label_input.read(reinterpret_cast<char *>(&labels[0]), num_points * sizeof(uint32_t));
 
       for (size_t i = 0; i < num_points; i++) {
         auto &pt = cloud.at(i);

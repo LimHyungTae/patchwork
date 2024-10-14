@@ -1,7 +1,11 @@
-#ifndef PATCHWORK_H
-#define PATCHWORK_H
+#ifndef INCLUDE_PATCHWORK_PATCHWORK_HPP_
+#define INCLUDE_PATCHWORK_PATCHWORK_HPP_
 
+#include <algorithm>
 #include <iostream>
+#include <string>
+#include <utility>
+#include <vector>
 
 #include <Eigen/Dense>
 #include <boost/format.hpp>
@@ -14,7 +18,7 @@
 #include <tbb/blocked_range.h>
 #include <tbb/parallel_for.h>
 
-#include "zone_models.hpp"
+#include "./zone_models.hpp"
 
 // vector cout operator
 template <typename T>
@@ -130,7 +134,7 @@ class PatchWork {
   typedef std::vector<Patch<PointT>> Ring;
   typedef std::vector<Ring> RegionwisePatches;
 
-  PatchWork(){};
+  PatchWork() {}
 
   std::string frame_patchwork = "map";
 
@@ -157,7 +161,7 @@ class PatchWork {
     return false;
   }
 
-  PatchWork(ros::NodeHandle *nh) {
+  explicit PatchWork(ros::NodeHandle *nh) {
     // Init ROS related
     ROS_INFO("Inititalizing PatchWork...");
     condParam(nh, "verbose", verbose_, false);
@@ -358,9 +362,8 @@ inline void PatchWork<PointT>::initialize(RegionwisePatches &patches,
   patch.ground_.reserve(1000);
   patch.non_ground_.reserve(1000);
 
-  // ToDo. Make it more general
-  // In polar coordinates, `num_columns` are `num_sectors` and `num_rows` are
-  // `num_rings`, respectively
+  // In polar coordinates, `num_columns` are `num_sectors`
+  // and `num_rows` are `num_rings`, respectively
   int num_rows = zone_model_.num_total_rings_;
   const auto &num_sectors_per_ring = zone_model.num_sectors_per_ring_;
 
@@ -468,11 +471,11 @@ inline double PatchWork<PointT>::consensus_set_based_height_estimation(
   assert(!((X.rows() != ranges.rows()) || (X.cols() != ranges.cols())));
 
   // check input parameters - only one element test
-  assert(!((X.rows() == 1) && (X.cols() == 1)));  // TODO: admit a trivial solution
+  assert(!((X.rows() == 1) && (X.cols() == 1)));
 
   int N = X.cols();
   std::vector<std::pair<double, int>> h;
-  for (size_t i = 0; (int)i < N; ++i) {
+  for (int i = 0; i < N; ++i) {
     h.push_back(std::make_pair(X(i) - ranges(i), i + 1));
     h.push_back(std::make_pair(X(i) + ranges(i), -i - 1));
   }
@@ -493,8 +496,8 @@ inline double PatchWork<PointT>::consensus_set_based_height_estimation(
   double sum_xi = 0;
   double sum_xi_square = 0;
 
-  for (size_t i = 0; (int)i < nr_centers; ++i) {
-    int idx = int(std::abs(h.at(i).second)) - 1;  // Indices starting at 1
+  for (size_t i = 0; i < nr_centers; ++i) {
+    int idx = static_cast<int>(std::abs(h.at(i).second)) - 1;  // Indices starting at 1
     int epsilon = (h.at(i).second > 0) ? 1 : -1;
 
     consensus_set_cardinal += epsilon;
@@ -540,7 +543,7 @@ inline void PatchWork<PointT>::estimate_sensor_height(pcl::PointCloud<PointT> cl
   vector<double> linearities;
   vector<double> planarities;
   for (int i = 0; i < num_sectors_for_ATAT_; ++i) {
-    if ((int)ring_for_ATAT[i].cloud_.size() < num_min_pts_) {
+    if (static_cast<int>(ring_for_ATAT[i].cloud_.size()) < num_min_pts_) {
       continue;
     }
 
@@ -651,7 +654,7 @@ inline void PatchWork<PointT>::estimate_ground(const pcl::PointCloud<PointT> &cl
       const auto &[ring_idx, sector_idx] = patch_indices_[k];
       auto &patch = regionwise_patches_[ring_idx][sector_idx];
 
-      if ((int)patch.cloud_.points.size() > num_min_pts_) {
+      if (patch.cloud_.points.size() > num_min_pts_) {
         // 2022.05.02 update
         // Region-wise sorting is adopted, which is much faster than global
         // sorting!
@@ -848,7 +851,7 @@ template <typename PointT>
 inline geometry_msgs::PolygonStamped PatchWork<PointT>::set_polygons(int ring_idx,
                                                                      int sector_idx,
                                                                      int num_split) {
-  const static auto &boundary_ranges = zone_model_.boundary_ranges_;
+  static const auto &boundary_ranges = zone_model_.boundary_ranges_;
   int num_sectors = zone_model_.num_sectors_per_ring_[ring_idx];
   geometry_msgs::PolygonStamped polygons;
   polygons.header.frame_id = frame_patchwork;
@@ -925,4 +928,4 @@ inline int PatchWork<PointT>::determine_ground_likelihood_estimation_status(
   }
 }
 
-#endif
+#endif  // INCLUDE_PATCHWORK_PATCHWORK_HPP_

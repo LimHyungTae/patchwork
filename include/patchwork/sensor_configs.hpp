@@ -6,6 +6,7 @@
 #define PATCHWORK_SENSOR_CONFIG_HPP
 
 #include <iostream>
+#include <string>
 #include <vector>
 
 using namespace std;
@@ -25,7 +26,7 @@ struct SensorConfig {
    * Note: Only use-defined parameters are `num_laser_channels_per_zone_` and
    * `num_sectors_for_each_zone_`
    */
-  SensorConfig(const string &sensor_name) {
+  explicit SensorConfig(const string &sensor_name) {
     cout << "\033[1;32mTarget Sensor: " << sensor_name << "\033[0m" << endl;
     if (sensor_name == "VLP-16") {  // For Kimera-Multi dataset
       // https://www.amtechs.co.jp/product/VLP-16-Puck.pdf

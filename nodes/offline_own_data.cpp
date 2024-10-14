@@ -80,8 +80,7 @@ int main(int argc, char **argv) {
     // An example for Loading own data
     pcl::PointCloud<PointType> pc_curr;
     std::string filename = (boost::format("%s/%06d.%s") % file_dir % i % extension).str();
-    if (pcl::io::loadPCDFile<PointType>(filename, pc_curr) == -1)  //* load the file
-    {
+    if (pcl::io::loadPCDFile<PointType>(filename, pc_curr) == -1) {
       PCL_ERROR("Couldn't read file test_pcd.pcd \n");
       return (-1);
     }

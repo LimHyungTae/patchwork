@@ -1,14 +1,16 @@
 //
 // Created by shapelim on 6/23/21.
 //
+#ifndef INCLUDE_TOOLS_PCD_LOADER_HPP_
+#define INCLUDE_TOOLS_PCD_LOADER_HPP_
 
-#ifndef PATCHWORK_PCD_LOADER_HPP
-#define PATCHWORK_PCD_LOADER_HPP
+#include <string>
+#include <vector>
 
 template <typename T>
 class PcdLoader {
  public:
-  PcdLoader(const std::string &pcd_path) : pcd_path_(pcd_path) {
+  explicit PcdLoader(const std::string &pcd_path) : pcd_path_(pcd_path) {
     for (num_frames_ = 0;; num_frames_++) {
       std::string filename = (boost::format("%s/%06d.pcd") % pcd_path % num_frames_).str();
       if (!boost::filesystem::exists(filename)) {
@@ -25,7 +27,7 @@ class PcdLoader {
 
   size_t size() const { return num_frames_; }
 
-  pcl::PointCloud<T>::ConstPtr cloud(size_t i) const {
+  typename pcl::PointCloud<T>::ConstPtr cloud(size_t i) const {
     std::string filename = (boost::format("%s/%06d.bin") % pcd_path_ % i).str();
     FILE *file = fopen(filename.c_str(), "rb");
     if (!file) {
@@ -56,4 +58,4 @@ class PcdLoader {
   int num_frames_;
   std::string pcd_path_;
 };
-#endif  // PATCHWORK_PCD_LOADER_HPP
+#endif  // INCLUDE_TOOLS_PCD_LOADER_HPP_

@@ -3,7 +3,7 @@
 <rosparam command="load" file="$(find patchwork)/config/params_ouster128.yaml" />
 
 <node name="$(anon offline_own_data)" pkg="patchwork" type="offline_own_data" output="screen">
-<rosparam param="/algorithm">"patchwork"</rosparam> 
+<rosparam param="/algorithm">"patchwork"</rosparam>
 <rosparam param="/extension">"pcd"</rosparam>
 <rosparam param="/file_dir">"/home/shapelim/catkin_ws/src/patchwork/materials"</rosparam>
 <rosparam param="/stop_each_frame">false</rosparam>

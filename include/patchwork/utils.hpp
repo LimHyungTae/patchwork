@@ -1,12 +1,13 @@
 #ifndef COMMON_H
 #define COMMON_H
 
-#include "math.h"
-
+#include <cmath>
 #include <fstream>
 #include <iostream>
 #include <map>
 #include <sstream>
+#include <string>
+#include <utility>
 #include <vector>
 
 #include <experimental/filesystem>
@@ -101,8 +102,9 @@ int count_num_ground(const pcl::PointCloud<PointT> &pc) {
         if (pt.z < VEGETATION_THR) {
           num_ground++;
         }
-      } else
+      } else {
         num_ground++;
+      }
     }
   }
   return num_ground;
@@ -128,8 +130,9 @@ std::map<int, int> count_num_each_class(const pcl::PointCloud<PointT> &pc) {
         if (pt.z < VEGETATION_THR) {
           gt_counts.find(pt.label)->second++;
         }
-      } else
+      } else {
         gt_counts.find(pt.label)->second++;
+      }
     }
   }
   return gt_counts;
@@ -172,10 +175,12 @@ void discern_ground(const pcl::PointCloud<PointT> &src,
       if (pt.label == VEGETATION) {
         if (pt.z < VEGETATION_THR) {
           ground.push_back(pt);
-        } else
+        } else {
           non_ground.push_back(pt);
-      } else
+        }
+      } else {
         ground.push_back(pt);
+      }
     } else {
       non_ground.push_back(pt);
     }
@@ -201,11 +206,11 @@ void calculate_precision_recall(const pcl::PointCloud<PointT> &pc_curr,
   int num_TP = count_num_ground(ground_estimated);
   if (consider_outliers) {
     int num_outliers_est = count_num_outliers(ground_estimated);
-    precision = (double)(num_TP) / (num_ground_est - num_outliers_est) * 100;
-    recall = (double)(num_TP) / num_ground_gt * 100;
+    precision = static_cast<double>(num_TP) / (num_ground_est - num_outliers_est) * 100;
+    recall = static_cast<double>(num_TP) / num_ground_gt * 100;
   } else {
-    precision = (double)(num_TP) / num_ground_est * 100;
-    recall = (double)(num_TP) / num_ground_gt * 100;
+    precision = static_cast<double>(num_TP) / num_ground_est * 100;
+    recall = static_cast<double>(num_TP) / num_ground_gt * 100;
   }
 }
 
