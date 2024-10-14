@@ -27,7 +27,7 @@
 
 ---
 
-**IMPORTANT**: (Aug. 18th, 2024) I employ TBB, so its FPS is increased from **50 Hz** to **100 Hz**! 
+**IMPORTANT**: (Aug. 18th, 2024) I employ TBB, so its FPS is increased from **50 Hz** to **100 Hz**!
 If you want to use the paper version of Patchwork for SOTA comparison purpose, Please use this [ground seg. benchmark code](https://github.com/url-kaist/Ground-Segmentation-Benchmark).
 
 
@@ -35,7 +35,7 @@ Patchwork                  |  Concept of our method (CZM & GLE)
 :-------------------------:|:-------------------------:
 ![](img/patchwork_concept_resized.jpg) |  ![](img/patchwork.gif)
 
-It's an overall updated version of **R-GPF of ERASOR** [**[Code](https://github.com/LimHyungTae/ERASOR)**] [**[Paper](https://arxiv.org/abs/2103.04316)**]. 
+It's an overall updated version of **R-GPF of ERASOR** [**[Code](https://github.com/LimHyungTae/ERASOR)**] [**[Paper](https://arxiv.org/abs/2103.04316)**].
 
 ---
 
@@ -64,7 +64,7 @@ The code is tested successfully at
 ## :package: Prerequisite Installation
 
 ### ROS Setting
-- 1. Install [ROS](http://torch.ch/docs/getting-started.html) on a machine. 
+- 1. Install [ROS](http://torch.ch/docs/getting-started.html) on a machine.
 - 2. Thereafter, [jsk-visualization](https://github.com/jsk-ros-pkg/jsk_visualization) is required to visualize Ground Likelihood Estimation status.
 
 ```bash
@@ -83,7 +83,7 @@ sudo apt-get install ros-melodic-jsk-rviz-plugins
 mkdir -p ~/catkin_ws/src
 cd ~/catkin_ws/src
 git clone https://github.com/LimHyungTae/patchwork.git
-cd .. && catkin build patchwork 
+cd .. && catkin build patchwork
 ```
 
 ## :gear: How to Run Patchwork
@@ -119,10 +119,10 @@ _____labels
      |___000002.label
      |...
 _____...
-   
+
 ```
 
-3. Run launch file 
+3. Run launch file
 ```
 roslaunch patchwork offline_kitti.launch
 ```
@@ -137,7 +137,7 @@ It is easy by re-using `run_patchwork.launch`.
 Other important parameters are
 * If you feel too many below parts of non-ground points are considered as ground, lower `th_seeds` and `th_dist`.
 * If your environment is mostly flat, then turn on `using_global_elevation` as `true`.
-* Change `min_r`, `max_r`, and `evelation_thresholds` 
+* Change `min_r`, `max_r`, and `evelation_thresholds`
 
 If you are unsure about the `sensor_height`, simply launch Patchwork and set the `sensor_height` value in the terminal as shown below.
 
@@ -161,17 +161,17 @@ roslaunch patchwork run_patchwork.launch is_kitti:=false
 Note that `is_kitti=false` is important! Because it decides which rviz is opened. The rviz shows only estimated ground and non-ground because your own dataset may have no point-wise labels.
 
 4. Then play your bag file!
- 
+
 ```
 rosbag play $YOUR_BAG_FILE_NAME$.bag
 ```
 
-<details> 
+<details>
   <summary><strong>Exercise with the <a href="https://github.com/MIT-SPARK/Kimera-Multi-Data">Kimera-Multi dataset</a></strong></summary>
   For the Kimera-Multi dataset, you can use the following command:
 
   ```angular2html
-    roslaunch patchwork run_patchwork_kimera_multi.launch 
+    roslaunch patchwork run_patchwork_kimera_multi.launch
   ```
 
   Then, play the bag file as follows:
@@ -191,7 +191,7 @@ rosbag play $YOUR_BAG_FILE_NAME$.bag
 
 ### :mag: Own dataset using pcd files
 
-Please refer to `/nodes/offilne_own_data.cpp`. 
+Please refer to `/nodes/offilne_own_data.cpp`.
 
 (Note that in your own data format, there may not exist ground truth labels!)
 
@@ -209,7 +209,7 @@ For better understanding of the parameters of Patchwork, please read [our wiki, 
 
 2. Please check the output by following command and corresponding files:
 
-3. Set appropriate absolute file directory, i.e. `file_dir`, in `offline_ouster128.launch` 
+3. Set appropriate absolute file directory, i.e. `file_dir`, in `offline_ouster128.launch`
 ```
 roslaunch patchwork offline_ouster128.launch
 ```
@@ -228,9 +228,9 @@ If you use our code or method in your work, please consider citing the following
 
 ---------
 
---- 
+---
 
-## Updates 
+## Updates
 
 #### NEWS (22.12.24)
 - Merry christmas eve XD! `include/label_generator` is added to make the `.label` file, following the SemanticKITTI format.
@@ -241,11 +241,11 @@ If you use our code or method in your work, please consider citing the following
 - Pybinding + more advanced version is now available on [Patchwork++](https://github.com/url-kaist/patchwork-plusplus) as a preprocessing step for deep learning users (i.e., python users can also use our robust ground segmentation)!
 
 #### NEWS (22.07.13)
-- For increasing convenience of use, the examples and codes are extensively revised by reflecting [issue #12](https://github.com/LimHyungTae/patchwork/issues/12). 
+- For increasing convenience of use, the examples and codes are extensively revised by reflecting [issue #12](https://github.com/LimHyungTae/patchwork/issues/12).
 
 #### NEWS (22.05.22)
 - The meaning of `elevation_thresholds` is changed to increase the usability. The meaning is explained in [wiki](https://github.com/LimHyungTae/patchwork/wiki/4.-IMPORTANT:-Setting-Parameters-of-Patchwork-in-Your-Own-Env.).
-- A novel height estimator, called *All-Terrain Automatic heighT estimator (ATAT)* is added within the patchwork code, which auto-calibrates the sensor height using the ground points in the vicinity of the vehicle/mobile robot. 
+- A novel height estimator, called *All-Terrain Automatic heighT estimator (ATAT)* is added within the patchwork code, which auto-calibrates the sensor height using the ground points in the vicinity of the vehicle/mobile robot.
   - Please refer to the function `consensus_set_based_height_estimation()`.
 
 #### NEWS (21.12.27)
@@ -259,5 +259,3 @@ roslaunch patchwork pub_for_legoloam.launch
 rosbag play {YOUR_FILE_PATH}/KITTI_BAG/kitti_sequence_00.bag --clock /kitti/velo/pointcloud:=/velodyne_points
 ```
 - **This README about this LiDAR odometry is still incomplete. It will be updated soon!**
-
-
