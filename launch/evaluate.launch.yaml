@@ -24,7 +24,7 @@ launch:
         - name: "dataset_path"
           value: "$(var dataset_path)"
 
-        - from: $(find-pkg-share patchwork)/config/vel_hdl64e.yaml
+        - from: $(find-pkg-share patchwork)/config/velodyne64.yaml
 
   - node:
       if: $(var start_rviz)
