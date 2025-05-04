@@ -45,10 +45,10 @@ class InterfaceNode : public rclcpp::Node {
     pcl::fromROSMsg(*msg, pc_curr);
 
     pcl::PointCloud<PointType> pc_ground, pc_non_ground, pc_labeled;
-    double time_taken;
 
-    patchwork_->estimate_ground(pc_curr, pc_ground, pc_non_ground, time_taken);
-    double hz = 1.0 / time_taken;
+    patchwork_->estimate_ground(pc_curr, pc_ground, pc_non_ground);
+    const double time_taken = patchwork_->get_time();
+    const double hz = 1.0 / time_taken;
 
     RCLCPP_INFO(this->get_logger(),
                 "[%s] Time: %.2f ms | Hz: %.2f | Points: %zu -> %zu",
@@ -138,8 +138,8 @@ int main(int argc, char **argv) {
       loader.get_cloud(n, cloud);
 
       pcl::PointCloud<PointEvalType> ground, non_ground;
-      double time_taken;
-      patchwork_eval->estimate_ground(cloud, ground, non_ground, time_taken);
+      patchwork_eval->estimate_ground(cloud, ground, non_ground);
+      double time_taken = patchwork_eval->get_time();
 
       double precision, recall, precision_naive, recall_naive;
       calculate_precision_recall(cloud, ground, precision, recall);

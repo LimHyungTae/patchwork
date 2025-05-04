@@ -20,6 +20,7 @@
 #include <tbb/parallel_for.h>
 
 #include "./zone_models.hpp"
+#include "tools/tictoc.hpp"
 
 // vector cout operator
 template <typename T>
@@ -189,8 +190,9 @@ class PatchWork {
 
   void estimate_ground(const pcl::PointCloud<PointT> &cloud_in,
                        pcl::PointCloud<PointT> &ground,
-                       pcl::PointCloud<PointT> &nonground,
-                       double &time_taken);
+                       pcl::PointCloud<PointT> &nonground);
+
+  inline double get_time() { return time_taken_; }
 
   geometry_msgs::msg::PolygonStamped set_plane_polygon(const MatrixXf &normal_v, const float &d);
 
@@ -216,6 +218,8 @@ class PatchWork {
 
   bool verbose_;
   bool initialized_ = true;
+
+  double time_taken_;
 
   // For global threshold
   bool using_global_thr_;
@@ -527,8 +531,7 @@ inline void PatchWork<PointT>::estimate_sensor_height(pcl::PointCloud<PointT> cl
 template <typename PointT>
 inline void PatchWork<PointT>::estimate_ground(const pcl::PointCloud<PointT> &cloud_in,
                                                pcl::PointCloud<PointT> &ground,
-                                               pcl::PointCloud<PointT> &nonground,
-                                               double &time_taken) {
+                                               pcl::PointCloud<PointT> &nonground) {
   // Just for visualization
   // poly_list_.header.stamp = rclcpp::Clock().now();
   // if (!poly_list_.polygons.empty()) poly_list_.polygons.clear();
@@ -541,14 +544,13 @@ inline void PatchWork<PointT>::estimate_ground(const pcl::PointCloud<PointT> &cl
               << "\033[0m" << std::endl;
   }
 
-  static double start, end;
   // static double start, t0, t1, t2;
   // double                  t_total_ground   = 0.0;
   double t_total_estimate = 0.0;
   // 1.Msg to pointcloud
   pcl::PointCloud<PointT> cloud_in_tmp = cloud_in;
 
-  start = rclcpp::Clock().now().seconds();
+  auto timer = patchwork::TicToc();
 
   // Error point removal
   // As there are some error mirror reflection under the ground,
@@ -677,29 +679,9 @@ inline void PatchWork<PointT>::estimate_ground(const pcl::PointCloud<PointT> &cl
               "Something wrong in "
               "`determine_ground_likelihood_estimation_status()` fn!");
         }
-        double t_tmp3 = rclcpp::Clock().now().seconds();
-        t_total_estimate += t_tmp3 - t_tmp2;
       });
 
-  end = rclcpp::Clock().now().seconds();
-  time_taken = end - start;
-  //    ofstream time_txt("/home/shapelim/patchwork_time_anal.txt",
-  //    std::ios::app); time_txt<<t0 - start<<" "<<t1 - t0 <<" "<<t2-t1<<"
-  //    "<<t_total_ground<< " "<<t_total_estimate<<"\n"; time_txt.close();
-
-  // if (verbose_) {
-  //   sensor_msgs::PointCloud2 cloud_ROS;
-  //   pcl::toROSMsg(reverted_points_by_flatness_, cloud_ROS);
-  //   cloud_ROS.header.stamp = rclcpp::Clock().now();
-  //   cloud_ROS.header.frame_id = frame_patchwork;
-  //   RevertedCloudPub.publish(cloud_ROS);
-  //   pcl::toROSMsg(rejected_points_by_elevation_, cloud_ROS);
-  //   cloud_ROS.header.stamp = rclcpp::Clock().now();
-  //   cloud_ROS.header.frame_id = frame_patchwork;
-  //   RejectedCloudPub.publish(cloud_ROS);
-  // }
-  // poly_list_.header.frame_id = frame_patchwork;
-  // PlanePub.publish(poly_list_);
+  time_taken_ = timer.toc();
 }
 
 template <typename PointT>
