@@ -113,8 +113,6 @@ class PatchWork {
 
   PatchWork() {}
 
-  std::string frame_patchwork = "map";
-
   explicit PatchWork(rclcpp::Node *node) {
     RCLCPP_INFO(node->get_logger(), "Initializing PatchWork...");
 
@@ -148,7 +146,6 @@ class PatchWork {
                                                                  {0.0005, 0.000725, 0.001, 0.001});
 
     visualize_ = node->declare_parameter<bool>("visualize", true);
-    frame_patchwork = node->declare_parameter<std::string>("frame_patchwork", frame_patchwork);
 
     // poly_list_.header.frame_id = frame_patchwork;
     // poly_list_.polygons.reserve(130000);
@@ -243,7 +240,6 @@ class PatchWork {
   // TOGO(hlim): Now, jsk_recognition_msgs does not support ROS2
   // jsk_recognition_msgs::PolygonArray poly_list_;
 
-  // ros::Publisher PlanePub, RevertedCloudPub, RejectedCloudPub;
   pcl::PointCloud<PointT> reverted_points_by_flatness_, rejected_points_by_elevation_;
 
   void initialize(RegionwisePatches &patches, const ConcentricZoneModel &zone_model);
