@@ -34,7 +34,7 @@ class InterfaceNode : public rclcpp::Node {
 
     // Subscriber
     cloud_sub_ = create_subscription<RosPointCloud2>(
-        "/patchwork/lidar", 10, std::bind(&InterfaceNode::pointcloudCallback, this, _1));
+        "/patchwork/input_cloud", 10, std::bind(&InterfaceNode::pointcloudCallback, this, _1));
 
     RCLCPP_INFO(this->get_logger(), "Patchwork Benchmark Node Initialized.");
   }
