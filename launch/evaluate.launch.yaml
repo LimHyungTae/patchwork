@@ -1,0 +1,37 @@
+---
+launch:
+  - arg: {name: start_rviz, default: "true", description: automatically start rviz}
+  - arg: {name: name_space, default: "patchwork", description: Namespace for multiple run }
+
+  - arg: {name: evaluate_semantickitti, default: "true", description: "If true, runs offline evaluation using SemanticKITTI dataset instead of subscribing to live ROS2 topics" }
+  - arg: {name: save_flag, default: "false", description: "Whether to save evaluation outputs such as accuracy metrics and .label or .pcd files" }
+  - arg: {name: use_sor_before_save, default: "false", description: "Whether to apply Statistical Outlier Removal (SOR)" }
+  - arg: {name: dataset_path, default: "", description: "Absolute path to the SemanticKITTI dataset root directory (e.g., /path/to/sequences/00)" }
+
+  - node:
+      namespace: $(var name_space)
+      pkg: patchwork
+      exec: run_patchwork
+      name: patchwork
+      output: screen
+      on_exit: shutdown
+
+      param:
+        - name: "evaluate_semantickitti"
+          value: "$(var evaluate_semantickitti)"
+        - name: "save_flag"
+          value: "$(var save_flag)"
+        - name: "dataset_path"
+          value: "$(var dataset_path)"
+
+        - from: $(find-pkg-share patchwork)/config/vel_hdl64e.yaml
+
+  - node:
+      if: $(var start_rviz)
+      pkg: rviz2
+      exec: rviz2
+      name: "rviz"
+      launch-prefix: "nice"
+      output: "screen"
+      args: >
+        -d $(find-pkg-share patchwork)/rviz/semantickitti.rviz
