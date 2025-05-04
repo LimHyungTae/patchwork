@@ -1,0 +1,34 @@
+---
+launch:
+  - arg: {name: start_rviz, default: "true", description: automatically start rviz}
+  - arg: {name: rviz_path,  default: $(find-pkg-share patchwork)/rviz/rviz2.rviz, description: rviz file to load}
+  - arg: {name: name_space, default: "patchwork", description: 'Namespace for multiple run' }
+  - arg: {name: data_path, default: "", description: 'The actual robot used when acquiring data' }
+
+  # Frames
+  # - arg: {name: map_frame, default: 'odom'}
+  # - arg: {name: base_frame, default: 'base_link'}
+
+  - node:
+      namespace: $(var name_space)
+      pkg: patchwork
+      exec: run_patchwork
+      name: patchwork
+      output: screen
+      on_exit: shutdown
+
+      # remap:
+        # <!-- - { from: 'lidar', to: 'lidar_points' } -->
+        # <!-- - { from: 'imu',   to: 'imu/data'   } -->
+      param:
+        - from: $(find-pkg-share patchwork)/config/params_kitti.yaml
+
+  - node:
+      if: $(var start_rviz)
+      pkg: rviz2
+      exec: rviz2
+      name: "rviz"
+      launch-prefix: "nice"
+      output: "screen"
+      args: >
+        -d $(find-pkg-share patchwork)/rviz/patchwork.rviz

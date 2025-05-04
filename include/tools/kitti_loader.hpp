@@ -1,6 +1,7 @@
 //
 // Created by shapelim on 6/23/21.
 //
+#include <filesystem>
 #include <string>
 #include <vector>
 
@@ -9,6 +10,8 @@
 #ifndef PATCHWORK_PCD_LOADER_HPP
 #define PATCHWORK_PCD_LOADER_HPP
 
+namespace fs = std::filesystem;
+
 class KittiLoader {
  public:
   explicit KittiLoader(const std::string &abs_path) {
@@ -16,15 +19,19 @@ class KittiLoader {
     label_path_ = abs_path + "/labels";
 
     for (num_frames_ = 0;; num_frames_++) {
-      std::string filename = (boost::format("%s/%06d.bin") % pc_path_ % num_frames_).str();
-      if (!boost::filesystem::exists(filename)) {
+      std::stringstream ss;
+      ss << pc_path_ << "/" << std::setfill('0') << std::setw(6) << num_frames_ << ".bin";
+      std::string filename = ss.str();
+      if (!fs::exists(filename)) {
         break;
       }
     }
     int num_labels;
     for (num_labels = 0;; num_labels++) {
-      std::string filename = (boost::format("%s/%06d.label") % label_path_ % num_labels).str();
-      if (!boost::filesystem::exists(filename)) {
+      std::stringstream ss;
+      ss << label_path_ << "/" << std::setfill('0') << std::setw(6) << num_labels << ".label";
+      std::string filename = ss.str();
+      if (!fs::exists(filename)) {
         break;
       }
     }
@@ -46,7 +53,9 @@ class KittiLoader {
 
   template <typename T>
   void get_cloud(size_t idx, pcl::PointCloud<T> &cloud) const {
-    std::string filename = (boost::format("%s/%06d.bin") % pc_path_ % idx).str();
+    std::stringstream ss;
+    ss << pc_path_ << "/" << std::setfill('0') << std::setw(6) << idx << ".bin";
+    std::string filename = ss.str();
     FILE *file = fopen(filename.c_str(), "rb");
     if (!file) {
       throw invalid_argument("Could not open the .bin file!");
@@ -73,7 +82,10 @@ class KittiLoader {
         pt.intensity = buffer[i * 4 + 3];
       }
     } else if (std::is_same<T, PointXYZILID>::value) {
-      std::string label_name = (boost::format("%s/%06d.label") % label_path_ % idx).str();
+      std::stringstream ss;
+      ss << label_path_ << "/" << std::setfill('0') << std::setw(6) << idx << ".label";
+      std::string label_name = ss.str();
+      //
       //            std::cout << label_name << std::endl;
       std::ifstream label_input(label_name, std::ios::binary);
       if (!label_input.is_open()) {

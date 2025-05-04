@@ -6,7 +6,7 @@
 #include <vector>
 
 #include <boost/format.hpp>
-#include <geometry_msgs/Pose.h>
+#include <geometry_msgs/msg/pose.hpp>
 #include <pcl/common/centroid.h>
 #include <pcl/common/common.h>
 #include <pcl/filters/statistical_outlier_removal.h>

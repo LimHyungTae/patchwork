@@ -4,16 +4,25 @@
 #ifndef INCLUDE_TOOLS_PCD_LOADER_HPP_
 #define INCLUDE_TOOLS_PCD_LOADER_HPP_
 
+#include <filesystem>
+#include <sstream>
 #include <string>
 #include <vector>
+
+#include <pcl/common/centroid.h>
+#include <pcl/common/common.h>
+
+namespace fs = std::filesystem;
 
 template <typename T>
 class PcdLoader {
  public:
   explicit PcdLoader(const std::string &pcd_path) : pcd_path_(pcd_path) {
     for (num_frames_ = 0;; num_frames_++) {
-      std::string filename = (boost::format("%s/%06d.pcd") % pcd_path % num_frames_).str();
-      if (!boost::filesystem::exists(filename)) {
+      std::stringstream ss;
+      ss << pcd_path_ << "/" << std::setfill('0') << std::setw(6) << num_frames_ << ".pcd";
+      std::string filename = ss.str();
+      if (!fs::exists(filename)) {
         break;
       }
     }
@@ -28,7 +37,9 @@ class PcdLoader {
   size_t size() const { return num_frames_; }
 
   typename pcl::PointCloud<T>::ConstPtr cloud(size_t i) const {
-    std::string filename = (boost::format("%s/%06d.bin") % pcd_path_ % i).str();
+    std::stringstream ss;
+    ss << pcd_path_ << "/" << std::setfill('0') << std::setw(6) << i << ".pcd";
+    std::string filename = ss.str();
     FILE *file = fopen(filename.c_str(), "rb");
     if (!file) {
       std::cerr << "error: failed to load " << filename << std::endl;
