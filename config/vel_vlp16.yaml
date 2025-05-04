@@ -4,23 +4,27 @@
     #          `sensor_height` denotes the elevation of the origin of the point cloud "with respect to the ground"
     #          So, it mostly have a positive value
     #          Note that if `patchwork/ATAT/ATAT_ON` is set to be true, the sensor_height is auto-calibrated
-    sensor_height: 1.723
-    sensor_model: "HDL-64E"
+    #          Nevertheless, `sensor_height` should be set appropriately!
+    sensor_height: 0.6
+    sensor_model: "VLP-16"
     # Extrinsics (Raw lidar coordinate -> Coordinate that is parallel to the X-Y plane of ground)
     # But, not in use
     extrinsic_trans: [0.0, 0.0, 0.0]
     extrinsic_rot: [1, 0, 0,
                     0, 1, 0,
                     0, 0, 1]
+
     mode: "czm"
+    verbose: false  # To check effect of uprightness/elevation/flatness
+    visualize: true # Ground Likelihood Estimation is visualized
     # Ground Plane Fitting parameters
     num_iter: 3
     num_lpr: 20
     num_min_pts: 10
-    th_seeds: 0.5
-    th_dist: 0.125
-    max_r: 80.0
-    min_r: 2.7 # to consider vicinity of mobile plot form.
+    th_seeds: 0.2
+    th_dist: 0.075
+    max_r: 60.0
+    min_r: 0.6 # to consider vicinity of mobile plot form.
     uprightness_thr: 0.707 # For uprightness. 45: 0.707 / 60: 0.866. The larger, the more conservative
 
     # The points below the adaptive_seed_selection_margin * sensor_height are filtered
@@ -31,9 +35,10 @@
     # It is not in the paper
     # It is also not matched our philosophy, but it is employed to reject some FPs easily & intuitively.
     # For patchwork, the global elevation threshold is only applied on Z3 and Z4
-    using_global_elevation: false
+    # In Kimera-Multi, the environments are mostly flat, so it is used.
+    using_global_elevation: true
     # W.r.t sensor frame (That is, if it is 0.0, then the candidates whose z is higher than z height of 3D LiDAR sensor are rejected
-    global_elevation_threshold: -0.5
+    global_elevation_threshold: 0.0
 
     # 22.05.02 Update
     # ATAT is the abbrev. for All-Terrain Automatic heighT estimator

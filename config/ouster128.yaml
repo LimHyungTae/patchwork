@@ -1,22 +1,21 @@
-# 22.05.02 Update
-#          `sensor_height` denotes the elevation of the origin of the point cloud "with respect to the ground"
-#          So, it mostly have a positive value
-#          Note that if `patchwork/ATAT/ATAT_ON` is set to be true, the sensor_height is auto-calibrated
-#          Nevertheless, the `sensor_height` should be set appropriately!
-sensor_height: 1.5
-save_flag: true
-sensor_model: "OS1-128"
+/**:
+  ros__parameters:
+    # 22.05.02 Update
+    #          `sensor_height` denotes the elevation of the origin of the point cloud "with respect to the ground"
+    #          So, it mostly have a positive value
+    #          Note that if `patchwork/ATAT/ATAT_ON` is set to be true, the sensor_height is auto-calibrated
+    #          Nevertheless, `sensor_height` should be set appropriately!
+    sensor_height: 1.5
+    save_flag: true
+    sensor_model: "OS1-128"
 
-# Extrinsics (Raw lidar coordinate -> Coordinate that is parallel to the X-Y plane of ground)
-# But, not in use
-extrinsic_trans: [0.0, 0.0, 0.0]
-extrinsic_rot: [1, 0, 0,
-               0, 1, 0,
-               0, 0, 1]
-patchwork:
+    # Extrinsics (Raw lidar coordinate -> Coordinate that is parallel to the X-Y plane of ground)
+    # But, not in use
+    extrinsic_trans: [0.0, 0.0, 0.0]
+    extrinsic_rot: [1, 0, 0,
+                    0, 1, 0,
+                    0, 0, 1]
     mode: "czm"
-    verbose: false # To check effect of uprightness/elevation/flatness
-    visualize: true # Ground Likelihood Estimation is visualized
     # Ground Plane Fitting parameters
     num_iter: 3
     num_lpr: 20
@@ -53,20 +52,13 @@ patchwork:
         num_sectors_for_ATAT: 20
         noise_bound: 0.2
 
-    uniform: # deprecated
-        num_rings: 16
-        num_sectors: 54
     czm:
-        # Note that `num_zones` == size of `num_sectors_each_zone` == size of `num_rings_each_zone` == size of `min_ranges` - 1
-        # To divide zones, max_r, min_r, and min_ranges are utilized
-        num_zones: 4
-        num_sectors_each_zone: [16, 32 ,54, 32]
-        num_rings_each_zone: [2, 4, 4, 4]
-        # Note that `min_r` == `min_ranges_each_zone`[0]!
-        min_ranges_each_zone: [2.7, 12.3625, 22.025, 41.35]
-        # The elevation_thresholds are with respect to the sensor frame
-        # Thus, actually (sensor_height - threshold_value) is the maximum ground height.
-        # For instance, for the first ring, 1.723 - 1.2 = 0.523 is acceptable, maximum ground height
-        # Note that the size of below parameters are indepentent to `num_zones`!
+        # 22.05.02 Update
+        # For usability, the MEANING OF THE ELEVATION THRESHOLDS IS CHANGED!!!!
+        # Original - the elevation w.r.t. to the sensor frame
+        # Modified - the elevation w.r.t. to the ground
+        # Thus, -sensor_height + elevation_threshold is the criteria.
+        # E.g. for the first ring, -1.723 (sensor height in the KITTI) + 0.523 = -1.2 becomes the criteria of the elevation filter
+        # That is, if the z-elevation of the bin is higher than -1.2, then the cloud points from the bin are rejected
         elevation_thresholds:  [0.5, 0.8, 1.0, 1.1] # For elevation. The size should be equal to flatness_thresholds vector
         flatness_thresholds:  [0.0, 0.000125, 0.000185, 0.000185]  # For flatness. The size should be equal to elevation_thresholds vector
