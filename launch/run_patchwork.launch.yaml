@@ -1,17 +1,13 @@
 ---
 launch:
   - arg: {name: start_rviz, default: "true", description: automatically start rviz}
-  - arg: {name: rviz_path,  default: $(find-pkg-share patchwork)/rviz/rviz2.rviz, description: rviz file to load}
+  - arg: {name: rviz_path,  default: $(find-pkg-share patchwork)/rviz/patchwork.rviz}
   - arg: {name: name_space, default: "patchwork", description: Namespace for multiple run }
+  - arg: {name: scan_topic, default: "/cloud_registered"}
+  - arg: {name: sensor_type, default: "velodyne64"}
 
-  - arg: {name: evaluate_semantickitti, default: "true", description: "If true, runs offline evaluation using SemanticKITTI dataset instead of subscribing to live ROS2 topics" }
-  - arg: {name: save_flag, default: "false", description: "Whether to save evaluation outputs such as accuracy metrics and .label or .pcd files" }
-  - arg: {name: use_sor_before_save, default: "false", description: "Whether to apply Statistical Outlier Removal (SOR)" }
-  - arg: {name: dataset_path, default: "", description: "Absolute path to the SemanticKITTI dataset root directory (e.g., /path/to/sequences/00)" }
-
-  # Frames
-  # - arg: {name: map_frame, default: 'odom'}
-  # - arg: {name: base_frame, default: 'base_link'}
+  - arg: {name: verbose, default: "false"}
+  - arg: {name: visualize, default: "false"}
 
   - node:
       namespace: $(var name_space)
@@ -21,18 +17,16 @@ launch:
       output: screen
       on_exit: shutdown
 
-      # remap:
-        # <!-- - { from: 'lidar', to: 'lidar_points' } -->
-        # <!-- - { from: 'imu',   to: 'imu/data'   } -->
-      param:
-        - name: "evaluate_semantickitti"
-          value: "$(var evaluate_semantickitti)"
-        - name: "save_flag"
-          value: "$(var save_flag)"
-        - name: "dataset_path"
-          value: "$(var dataset_path)"
+      remap:
+        - { from: "/patchwork/input_cloud", to: '$(var scan_topic)' }
 
-        - from: $(find-pkg-share patchwork)/config/params_kitti.yaml
+      param:
+        - name: "verbose"
+          value: "$(var verbose)"
+        - name: "visualize"
+          value: "$(var visualize)"
+
+        - from: $(find-pkg-share patchwork)/config/$(var sensor_type).yaml
 
   - node:
       if: $(var start_rviz)
@@ -42,4 +36,4 @@ launch:
       launch-prefix: "nice"
       output: "screen"
       args: >
-        -d $(find-pkg-share patchwork)/rviz/patchwork.rviz
+        -d $(var rviz_path)
