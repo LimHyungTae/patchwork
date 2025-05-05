@@ -6,7 +6,8 @@
 #include <visualization_msgs/msg/marker.hpp>
 
 #define PCL_NO_PRECOMPILE
-#define EST_GROUND 1
+// #define EST_GROUND 1  // In general cases
+#define EST_GROUND 14  // For adk20k_mit
 #define EST_NONGROUND 0
 
 #include "patchwork/patchwork.hpp"  // Your implementation
@@ -36,7 +37,7 @@ class InterfaceNode : public rclcpp::Node {
     cloud_pub_ = create_publisher<RosPointCloud2>("lidar_out", qos);
     ground_pub_ = create_publisher<RosPointCloud2>("ground", qos);
     nonground_pub_ = create_publisher<RosPointCloud2>("non_ground", qos);
-    labeled_pub_ = create_publisher<RosPointCloud2>("/labeled_cloud", qos);
+    labeled_pub_ = create_publisher<RosPointCloud2>("cloud_groundseg_lidar", qos);
 
     // Subscriber
     cloud_sub_ = create_subscription<RosPointCloud2>(
