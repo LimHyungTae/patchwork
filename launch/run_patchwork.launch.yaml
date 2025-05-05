@@ -1,0 +1,39 @@
+---
+launch:
+  - arg: {name: start_rviz, default: "true", description: automatically start rviz}
+  - arg: {name: rviz_path,  default: $(find-pkg-share patchwork)/rviz/patchwork.rviz}
+  - arg: {name: name_space, default: "patchwork", description: Namespace for multiple run }
+  - arg: {name: scan_topic, default: "/cloud_registered"}
+  - arg: {name: sensor_type, default: "velodyne64"}
+
+  - arg: {name: verbose, default: "false"}
+  - arg: {name: visualize, default: "false"}
+
+  - node:
+      namespace: $(var name_space)
+      pkg: patchwork
+      exec: run_patchwork
+      name: patchwork
+      output: screen
+      on_exit: shutdown
+
+      remap:
+        - { from: "/patchwork/input_cloud", to: '$(var scan_topic)' }
+
+      param:
+        - name: "verbose"
+          value: "$(var verbose)"
+        - name: "visualize"
+          value: "$(var visualize)"
+
+        - from: $(find-pkg-share patchwork)/config/$(var sensor_type).yaml
+
+  - node:
+      if: $(var start_rviz)
+      pkg: rviz2
+      exec: rviz2
+      name: "rviz"
+      launch-prefix: "nice"
+      output: "screen"
+      args: >
+        -d $(var rviz_path)

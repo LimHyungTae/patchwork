@@ -9,16 +9,18 @@
 
 #include <Eigen/Dense>
 #include <boost/format.hpp>
-#include <jsk_recognition_msgs/PolygonArray.h>
+// #include <jsk_recognition_msgs/PolygonArray.h>
+#include <geometry_msgs/msg/polygon_stamped.hpp>
 #include <pcl/common/centroid.h>
 #include <pcl/io/pcd_io.h>
 #include <pcl_conversions/pcl_conversions.h>
-#include <ros/ros.h>
-#include <sensor_msgs/PointCloud2.h>
+#include <rclcpp/qos.hpp>
+#include <rclcpp/rclcpp.hpp>
 #include <tbb/blocked_range.h>
 #include <tbb/parallel_for.h>
 
 #include "./zone_models.hpp"
+#include "tools/tictoc.hpp"
 
 // vector cout operator
 template <typename T>
@@ -29,31 +31,6 @@ std::ostream &operator<<(std::ostream &os, const std::vector<T> &vec) {
   }
   os << "]";
   return os;
-}
-
-// conditional parameter loading function for unorthodox (and normal) parameter
-// locations
-template <typename T>
-bool condParam(ros::NodeHandle *nh,
-               const std::string &param_name,
-               T &param_val,
-               const T &default_val,
-               const std::string &prefix = "/patchwork") {
-  if (nh->hasParam(prefix + "/" + param_name)) {
-    if (nh->getParam(prefix + "/" + param_name, param_val)) {
-      ROS_INFO_STREAM("param '" << prefix << "/" << param_name << "' -> '" << param_val << "'");
-      return true;
-    }
-  } else if (nh->hasParam(ros::this_node::getName() + "/" + param_name)) {
-    if (nh->getParam(ros::this_node::getName() + "/" + param_name, param_val)) {
-      ROS_INFO_STREAM("param '" << ros::this_node::getName() << "/" << param_name << "' -> '"
-                                << param_val << "'");
-      return true;
-    }
-  }
-  param_val = default_val;
-  ROS_INFO_STREAM("param '" << param_name << "' -> '" << param_val << "' (default)");
-  return false;
 }
 
 #define NUM_HEURISTIC_MAX_PTS_IN_PATCH 3000
@@ -136,133 +113,85 @@ class PatchWork {
 
   PatchWork() {}
 
-  std::string frame_patchwork = "map";
+  explicit PatchWork(rclcpp::Node *node) {
+    RCLCPP_INFO(node->get_logger(), "Initializing PatchWork...");
 
-  template <typename T>
-  bool condParam(ros::NodeHandle *nh,
-                 const std::string &param_name,
-                 T &param_val,
-                 const T &default_val,
-                 const std::string &prefix = "/patchwork") const {
-    if (nh->hasParam(prefix + "/" + param_name)) {
-      if (nh->getParam(prefix + "/" + param_name, param_val)) {
-        ROS_INFO_STREAM("param '" << prefix << "/" << param_name << "' -> '" << param_val << "'");
-        return true;
-      }
-    } else if (nh->hasParam(ros::this_node::getName() + "/" + param_name)) {
-      if (nh->getParam(ros::this_node::getName() + "/" + param_name, param_val)) {
-        ROS_INFO_STREAM("param '" << ros::this_node::getName() << "/" << param_name << "' -> '"
-                                  << param_val << "'");
-        return true;
-      }
-    }
-    param_val = default_val;
-    ROS_INFO_STREAM("param '" << param_name << "' -> '" << param_val << "' (default)");
-    return false;
-  }
+    verbose_ = node->declare_parameter<bool>("verbose", false);
+    sensor_height_ = node->declare_parameter<double>("sensor_height", 1.723);
+    sensor_model_ = node->declare_parameter<std::string>("sensor_model", "HDL-64E");
 
-  explicit PatchWork(ros::NodeHandle *nh) {
-    // Init ROS related
-    ROS_INFO("Inititalizing PatchWork...");
-    condParam(nh, "verbose", verbose_, false);
-    condParam(nh, "sensor_height", sensor_height_, 1.723, "");
-    condParam(nh, "sensor_model", sensor_model_, std::string("HDL-64E"), "");
+    ATAT_ON_ = node->declare_parameter<bool>("ATAT.ATAT_ON", false);
+    max_r_for_ATAT_ = node->declare_parameter<double>("ATAT.max_r_for_ATAT", 5.0);
+    num_sectors_for_ATAT_ = node->declare_parameter<int>("ATAT.num_sectors_for_ATAT", 20);
+    noise_bound_ = node->declare_parameter<double>("ATAT.noise_bound", 0.2);
 
-    condParam(nh, "ATAT/ATAT_ON", ATAT_ON_, false);
-    condParam(nh, "ATAT/max_r_for_ATAT", max_r_for_ATAT_, 5.0);
-    condParam(nh, "ATAT/num_sectors_for_ATAT", num_sectors_for_ATAT_, 20);
-    condParam(nh, "ATAT/noise_bound", noise_bound_, 0.2);
+    num_iter_ = node->declare_parameter<int>("num_iter", 3);
+    num_lpr_ = node->declare_parameter<int>("num_lpr", 20);
+    num_min_pts_ = node->declare_parameter<int>("num_min_pts", 10);
+    th_seeds_ = node->declare_parameter<double>("th_seeds", 0.5);
+    th_dist_ = node->declare_parameter<double>("th_dist", 0.125);
+    max_range_ = node->declare_parameter<double>("max_r", 80.0);
+    min_range_ = node->declare_parameter<double>("min_r", 2.7);
 
-    condParam(nh, "num_iter", num_iter_, 3);
-    condParam(nh, "num_lpr", num_lpr_, 20);
-    condParam(nh, "num_min_pts", num_min_pts_, 10);
-    condParam(nh, "th_seeds", th_seeds_, 0.4);
-    condParam(nh, "th_dist", th_dist_, 0.3);
-    condParam(nh, "max_r", max_range_, 80.0);
-    condParam(nh, "min_r", min_range_,
-              2.7);  // It should cover the body size of the car.
-    condParam(nh, "uniform/num_rings", num_rings_, 30);
-    condParam(nh, "uniform/num_sectors", num_sectors_, 108);
-    condParam(nh, "uprightness_thr", uprightness_thr_,
-              0.5);  // The larger, the more strict
-    // The larger, the more soft
-    condParam(nh, "adaptive_seed_selection_margin", adaptive_seed_selection_margin_, -1.1);
+    uprightness_thr_ = node->declare_parameter<double>("uprightness_thr", 0.5);
+    adaptive_seed_selection_margin_ =
+        node->declare_parameter<double>("adaptive_seed_selection_margin", -1.1);
 
-    // It is not in the paper
-    // It is also not matched our philosophy, but it is employed to reject some
-    // FPs easily & intuitively. For patchwork, it is only applied on Z3 and Z4
-    condParam(nh, "using_global_elevation", using_global_thr_, true);
-    condParam(nh, "global_elevation_threshold", global_elevation_thr_, 0.0);
+    using_global_thr_ = node->declare_parameter<bool>("using_global_elevation", true);
+    global_elevation_thr_ = node->declare_parameter<double>("global_elevation_threshold", 0.0);
 
-    if (using_global_thr_) {
-      cout << "\033[1;33m[Warning] Global elevation threshold is turned on :"
-           << global_elevation_thr_ << "\033[0m" << endl;
-    } else {
-      cout << "Global thr. is not in use" << endl;
-    }
+    elevation_thr_ = node->declare_parameter<std::vector<double>>("czm.elevation_thresholds",
+                                                                  {0.523, 0.746, 0.879, 1.125});
+    flatness_thr_ = node->declare_parameter<std::vector<double>>("czm.flatness_thresholds",
+                                                                 {0.0005, 0.000725, 0.001, 0.001});
 
-    ROS_INFO("Sensor Height: %f", sensor_height_);
-    ROS_INFO("Num of Iteration: %d", num_iter_);
-    ROS_INFO("Num of LPR: %d", num_lpr_);
-    ROS_INFO("Num of min. points: %d", num_min_pts_);
-    ROS_INFO("Seeds Threshold: %f", th_seeds_);
-    ROS_INFO("Distance Threshold: %f", th_dist_);
-    ROS_INFO("Max. range:: %f", max_range_);
-    ROS_INFO("Min. range:: %f", min_range_);
-    ROS_INFO("adaptive_seed_selection_margin: %f", adaptive_seed_selection_margin_);
+    visualize_ = node->declare_parameter<bool>("visualize", true);
 
-    // CZM denotes 'Concentric Zone Model'. Please refer to our paper
-    // 2024.07.28. I feel `num_zones_`, `num_sectors_each_zone_`,
-    // num_rings_each_zone_` are rarely fine-tuned. So I've decided to provide
-    // predefined parameter sets for sensor types
-    condParam(nh, "czm/elevation_thresholds", elevation_thr_, {0.523, 0.746, 0.879, 1.125});
-    condParam(nh, "czm/flatness_thresholds", flatness_thr_, {0.0005, 0.000725, 0.001, 0.001});
-
-    ROS_INFO("\033[1;32mUprightness\33[0m threshold: %f", uprightness_thr_);
-    ROS_INFO("\033[1;32mElevation\33[0m thresholds: %f %f %f %f",
-             elevation_thr_[0],
-             elevation_thr_[1],
-             elevation_thr_[2],
-             elevation_thr_[3]);
-    ROS_INFO("\033[1;32mFlatness\033[0m thresholds: %f %f %f %f",
-             flatness_thr_[0],
-             flatness_thr_[1],
-             flatness_thr_[2],
-             flatness_thr_[3]);
-    ROS_INFO("Num. zones: %zu", zone_model_.num_zones_);
-
-    // It equals to elevation_thr_.size()/flatness_thr_.size();
-    zone_model_ = ConcentricZoneModel(sensor_model_, sensor_height_, min_range_, max_range_);
-    num_rings_of_interest_ = elevation_thr_.size();
-
-    condParam(nh, "visualize", visualize_, true);
-    condParam<std::string>(nh, "frame_patchwork", frame_patchwork, frame_patchwork);
-
-    poly_list_.header.frame_id = frame_patchwork;
-    poly_list_.polygons.reserve(130000);
-
+    // poly_list_.header.frame_id = frame_patchwork;
+    // poly_list_.polygons.reserve(130000);
     reverted_points_by_flatness_.reserve(NUM_HEURISTIC_MAX_PTS_IN_PATCH);
 
-    PlanePub = nh->advertise<jsk_recognition_msgs::PolygonArray>("/gpf/plane", 100);
-    RevertedCloudPub = nh->advertise<sensor_msgs::PointCloud2>("/revert_pc", 100);
-    RejectedCloudPub = nh->advertise<sensor_msgs::PointCloud2>("/reject_pc", 100);
+    if (using_global_thr_) {
+      RCLCPP_WARN(
+          node->get_logger(), "Global elevation threshold is ON: %f", global_elevation_thr_);
+    } else {
+      RCLCPP_INFO(node->get_logger(), "Global elevation threshold is OFF.");
+    }
+
+    RCLCPP_INFO(node->get_logger(), "Sensor model: %s", sensor_model_.c_str());
+    RCLCPP_INFO(node->get_logger(), "Sensor height: %.3f", sensor_height_);
+    RCLCPP_INFO(node->get_logger(), "Range: [%.2f, %.2f]", min_range_, max_range_);
+    RCLCPP_INFO(
+        node->get_logger(), "Seed threshold: %.3f | Distance threshold: %.3f", th_seeds_, th_dist_);
+    RCLCPP_INFO(node->get_logger(), "Uprightness threshold: %.3f", uprightness_thr_);
+    RCLCPP_INFO(node->get_logger(),
+                "Elevation thresholds: %.3f %.3f %.3f %.3f",
+                elevation_thr_[0],
+                elevation_thr_[1],
+                elevation_thr_[2],
+                elevation_thr_[3]);
+
+    zone_model_ = ConcentricZoneModel(sensor_model_, sensor_height_, min_range_, max_range_);
+    num_rings_of_interest_ = elevation_thr_.size();
 
     const auto &num_sectors_each_zone_ = zone_model_.sensor_config_.num_sectors_for_each_zone_;
     sector_sizes_ = {2 * M_PI / num_sectors_each_zone_.at(0),
                      2 * M_PI / num_sectors_each_zone_.at(1),
                      2 * M_PI / num_sectors_each_zone_.at(2),
                      2 * M_PI / num_sectors_each_zone_.at(3)};
-    cout << "INITIALIZATION COMPLETE" << endl;
 
     initialize(regionwise_patches_, zone_model_);
+
+    RCLCPP_INFO(node->get_logger(), "PatchWork initialization complete.");
   }
 
   void estimate_ground(const pcl::PointCloud<PointT> &cloud_in,
                        pcl::PointCloud<PointT> &ground,
-                       pcl::PointCloud<PointT> &nonground,
-                       double &time_taken);
+                       pcl::PointCloud<PointT> &nonground);
 
-  geometry_msgs::PolygonStamped set_plane_polygon(const MatrixXf &normal_v, const float &d);
+  inline double get_time() { return time_taken_; }
+
+  geometry_msgs::msg::PolygonStamped set_plane_polygon(const MatrixXf &normal_v, const float &d);
 
  private:
   // For ATAT (All-Terrain Automatic heighT estimator)
@@ -274,8 +203,6 @@ class PatchWork {
   int num_iter_;
   int num_lpr_;
   int num_min_pts_;
-  int num_rings_;
-  int num_sectors_;
   int num_rings_of_interest_;
 
   double sensor_height_;
@@ -288,6 +215,8 @@ class PatchWork {
 
   bool verbose_;
   bool initialized_ = true;
+
+  double time_taken_;
 
   // For global threshold
   bool using_global_thr_;
@@ -308,9 +237,9 @@ class PatchWork {
 
   RegionwisePatches regionwise_patches_;
 
-  jsk_recognition_msgs::PolygonArray poly_list_;
+  // TOGO(hlim): Now, jsk_recognition_msgs does not support ROS2
+  // jsk_recognition_msgs::PolygonArray poly_list_;
 
-  ros::Publisher PlanePub, RevertedCloudPub, RejectedCloudPub;
   pcl::PointCloud<PointT> reverted_points_by_flatness_, rejected_points_by_elevation_;
 
   void initialize(RegionwisePatches &patches, const ConcentricZoneModel &zone_model);
@@ -342,7 +271,7 @@ class PatchWork {
   /***
    * For visulization of Ground Likelihood Estimation
    */
-  geometry_msgs::PolygonStamped set_polygons(int ring_idx, int sector_idx, int num_split);
+  // geometry_msgs::msg::PolygonStamped set_polygons(int ring_idx, int sector_idx, int num_split);
 
   int determine_ground_likelihood_estimation_status(const int concentric_idx,
                                                     const double z_vec,
@@ -598,12 +527,11 @@ inline void PatchWork<PointT>::estimate_sensor_height(pcl::PointCloud<PointT> cl
 template <typename PointT>
 inline void PatchWork<PointT>::estimate_ground(const pcl::PointCloud<PointT> &cloud_in,
                                                pcl::PointCloud<PointT> &ground,
-                                               pcl::PointCloud<PointT> &nonground,
-                                               double &time_taken) {
+                                               pcl::PointCloud<PointT> &nonground) {
   // Just for visualization
-  poly_list_.header.stamp = ros::Time::now();
-  if (!poly_list_.polygons.empty()) poly_list_.polygons.clear();
-  if (!poly_list_.likelihood.empty()) poly_list_.likelihood.clear();
+  // poly_list_.header.stamp = rclcpp::Clock().now();
+  // if (!poly_list_.polygons.empty()) poly_list_.polygons.clear();
+  // if (!poly_list_.likelihood.empty()) poly_list_.likelihood.clear();
 
   if (initialized_ && ATAT_ON_) {
     estimate_sensor_height(cloud_in);
@@ -612,14 +540,13 @@ inline void PatchWork<PointT>::estimate_ground(const pcl::PointCloud<PointT> &cl
               << "\033[0m" << std::endl;
   }
 
-  static double start, end;
   // static double start, t0, t1, t2;
   // double                  t_total_ground   = 0.0;
   double t_total_estimate = 0.0;
   // 1.Msg to pointcloud
   pcl::PointCloud<PointT> cloud_in_tmp = cloud_in;
 
-  start = ros::Time::now().toSec();
+  auto timer = patchwork::TicToc();
 
   // Error point removal
   // As there are some error mirror reflection under the ground,
@@ -635,7 +562,7 @@ inline void PatchWork<PointT>::estimate_ground(const pcl::PointCloud<PointT> &cl
     }
   }
 
-  // t1 = ros::Time::now().toSec();
+  // t1 = rclcpp::Clock().now().toSec();
   flush_patches(regionwise_patches_);
   pc2regionwise_patches(cloud_in_tmp, regionwise_patches_);
 
@@ -696,14 +623,14 @@ inline void PatchWork<PointT>::estimate_ground(const pcl::PointCloud<PointT> &cl
         const auto &regionwise_nonground = patch.non_ground_;
         const auto status = patch.status_;
 
-        if (visualize_ && (status != FEW_POINTS && status != NOT_ASSIGNED)) {
-          auto polygons = set_polygons(ring_idx, sector_idx, 3);
-          polygons.header = poly_list_.header;
-          poly_list_.polygons.emplace_back(polygons);
-          poly_list_.likelihood.emplace_back(COLOR_MAP[status]);
-        }
+        // if (visualize_ && (status != FEW_POINTS && status != NOT_ASSIGNED)) {
+        //   auto polygons = set_polygons(ring_idx, sector_idx, 3);
+        //   polygons.header = poly_list_.header;
+        //   poly_list_.polygons.emplace_back(polygons);
+        //   poly_list_.likelihood.emplace_back(COLOR_MAP[status]);
+        // }
 
-        double t_tmp2 = ros::Time::now().toSec();
+        double t_tmp2 = rclcpp::Clock().now().seconds();
         if (status == FEW_POINTS) {
           ground += regionwise_ground;
           nonground += regionwise_nonground;
@@ -748,29 +675,9 @@ inline void PatchWork<PointT>::estimate_ground(const pcl::PointCloud<PointT> &cl
               "Something wrong in "
               "`determine_ground_likelihood_estimation_status()` fn!");
         }
-        double t_tmp3 = ros::Time::now().toSec();
-        t_total_estimate += t_tmp3 - t_tmp2;
       });
 
-  end = ros::Time::now().toSec();
-  time_taken = end - start;
-  //    ofstream time_txt("/home/shapelim/patchwork_time_anal.txt",
-  //    std::ios::app); time_txt<<t0 - start<<" "<<t1 - t0 <<" "<<t2-t1<<"
-  //    "<<t_total_ground<< " "<<t_total_estimate<<"\n"; time_txt.close();
-
-  if (verbose_) {
-    sensor_msgs::PointCloud2 cloud_ROS;
-    pcl::toROSMsg(reverted_points_by_flatness_, cloud_ROS);
-    cloud_ROS.header.stamp = ros::Time::now();
-    cloud_ROS.header.frame_id = frame_patchwork;
-    RevertedCloudPub.publish(cloud_ROS);
-    pcl::toROSMsg(rejected_points_by_elevation_, cloud_ROS);
-    cloud_ROS.header.stamp = ros::Time::now();
-    cloud_ROS.header.frame_id = frame_patchwork;
-    RejectedCloudPub.publish(cloud_ROS);
-  }
-  poly_list_.header.frame_id = frame_patchwork;
-  PlanePub.publish(poly_list_);
+  time_taken_ = timer.toc();
 }
 
 template <typename PointT>
@@ -847,57 +754,57 @@ inline void PatchWork<PointT>::perform_regionwise_ground_segmentation(Patch<Poin
   }
 }
 
-template <typename PointT>
-inline geometry_msgs::PolygonStamped PatchWork<PointT>::set_polygons(int ring_idx,
-                                                                     int sector_idx,
-                                                                     int num_split) {
-  static const auto &boundary_ranges = zone_model_.boundary_ranges_;
-  int num_sectors = zone_model_.num_sectors_per_ring_[ring_idx];
-  geometry_msgs::PolygonStamped polygons;
-  polygons.header.frame_id = frame_patchwork;
-  // Set point of polygon. Start from RL and ccw
-  geometry_msgs::Point32 point;
-  double sector_size = 2.0 * M_PI / static_cast<double>(num_sectors);
-  double angle_incremental = sector_size / static_cast<double>(num_split);
-  // RL
-  double r_len = boundary_ranges[ring_idx];
-  double angle = sector_idx * sector_size;
+// template <typename PointT>
+// inline geometry_msgs::msg::PolygonStamped PatchWork<PointT>::set_polygons(int ring_idx,
+//                                                                      int sector_idx,
+//                                                                      int num_split) {
+//   static const auto &boundary_ranges = zone_model_.boundary_ranges_;
+//   int num_sectors = zone_model_.num_sectors_per_ring_[ring_idx];
+//   geometry_msgs::msg::PolygonStamped polygons;
+//   polygons.header.frame_id = frame_patchwork;
+//   // Set point of polygon. Start from RL and ccw
+//   geometry_msgs::msg::Point32 point;
+//   double sector_size = 2.0 * M_PI / static_cast<double>(num_sectors);
+//   double angle_incremental = sector_size / static_cast<double>(num_split);
+//   // RL
+//   double r_len = boundary_ranges[ring_idx];
+//   double angle = sector_idx * sector_size;
 
-  point.x = r_len * cos(angle);
-  point.y = r_len * sin(angle);
-  point.z = MARKER_Z_VALUE;
-  polygons.polygon.points.push_back(point);
-  // RU
-  r_len = boundary_ranges[ring_idx + 1];
-  point.x = r_len * cos(angle);
-  point.y = r_len * sin(angle);
-  point.z = MARKER_Z_VALUE;
-  polygons.polygon.points.push_back(point);
+//   point.x = r_len * cos(angle);
+//   point.y = r_len * sin(angle);
+//   point.z = MARKER_Z_VALUE;
+//   polygons.polygon.points.push_back(point);
+//   // RU
+//   r_len = boundary_ranges[ring_idx + 1];
+//   point.x = r_len * cos(angle);
+//   point.y = r_len * sin(angle);
+//   point.z = MARKER_Z_VALUE;
+//   polygons.polygon.points.push_back(point);
 
-  // RU -> LU
-  for (int idx = 1; idx <= num_split; ++idx) {
-    angle = angle + angle_incremental;
-    point.x = r_len * cos(angle);
-    point.y = r_len * sin(angle);
-    point.z = MARKER_Z_VALUE;
-    polygons.polygon.points.push_back(point);
-  }
+//   // RU -> LU
+//   for (int idx = 1; idx <= num_split; ++idx) {
+//     angle = angle + angle_incremental;
+//     point.x = r_len * cos(angle);
+//     point.y = r_len * sin(angle);
+//     point.z = MARKER_Z_VALUE;
+//     polygons.polygon.points.push_back(point);
+//   }
 
-  r_len = boundary_ranges[ring_idx];
-  point.x = r_len * cos(angle);
-  point.y = r_len * sin(angle);
-  point.z = MARKER_Z_VALUE;
-  polygons.polygon.points.push_back(point);
+//   r_len = boundary_ranges[ring_idx];
+//   point.x = r_len * cos(angle);
+//   point.y = r_len * sin(angle);
+//   point.z = MARKER_Z_VALUE;
+//   polygons.polygon.points.push_back(point);
 
-  for (int idx = 1; idx < num_split; ++idx) {
-    angle = angle - angle_incremental;
-    point.x = r_len * cos(angle);
-    point.y = r_len * sin(angle);
-    point.z = MARKER_Z_VALUE;
-    polygons.polygon.points.push_back(point);
-  }
-  return polygons;
-}
+//   for (int idx = 1; idx < num_split; ++idx) {
+//     angle = angle - angle_incremental;
+//     point.x = r_len * cos(angle);
+//     point.y = r_len * sin(angle);
+//     point.z = MARKER_Z_VALUE;
+//     polygons.polygon.points.push_back(point);
+//   }
+//   return polygons;
+// }
 
 template <typename PointT>
 inline int PatchWork<PointT>::determine_ground_likelihood_estimation_status(
