@@ -28,11 +28,15 @@ class InterfaceNode : public rclcpp::Node {
     acc_filename_ = this->declare_parameter<std::string>("acc_filename", "");
     pcd_savepath_ = this->declare_parameter<std::string>("pcd_savepath", "");
 
+    rclcpp::QoS qos(5);
+    qos.durability(RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL);
+    qos.reliability(RMW_QOS_POLICY_RELIABILITY_RELIABLE);
+
     // Publishers
-    cloud_pub_ = create_publisher<RosPointCloud2>("lidar_out", 10);
-    ground_pub_ = create_publisher<RosPointCloud2>("ground", 10);
-    nonground_pub_ = create_publisher<RosPointCloud2>("non_ground", 10);
-    labeled_pub_ = create_publisher<RosPointCloud2>("/labeled_cloud", 10);
+    cloud_pub_ = create_publisher<RosPointCloud2>("lidar_out", qos);
+    ground_pub_ = create_publisher<RosPointCloud2>("ground", qos);
+    nonground_pub_ = create_publisher<RosPointCloud2>("non_ground", qos);
+    labeled_pub_ = create_publisher<RosPointCloud2>("/labeled_cloud", qos);
 
     // Subscriber
     cloud_sub_ = create_subscription<RosPointCloud2>(
