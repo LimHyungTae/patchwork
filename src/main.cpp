@@ -6,6 +6,8 @@
 #include <visualization_msgs/msg/marker.hpp>
 
 #define PCL_NO_PRECOMPILE
+#define EST_GROUND 1
+#define EST_NONGROUND 0
 
 #include "patchwork/patchwork.hpp"  // Your implementation
 #include "tools/kitti_loader.hpp"
@@ -67,8 +69,8 @@ class InterfaceNode : public rclcpp::Node {
     ground_pub_->publish(to_msg(pc_ground, msg->header));
     nonground_pub_->publish(to_msg(pc_non_ground, msg->header));
 
-    for (auto &pt : pc_ground.points) pt.label = 1;
-    for (auto &pt : pc_non_ground.points) pt.label = 0;
+    for (auto &pt : pc_ground.points) pt.label = EST_GROUND;
+    for (auto &pt : pc_non_ground.points) pt.label = EST_NONGROUND;
     pc_labeled = pc_ground;
     pc_labeled.insert(pc_labeled.end(), pc_non_ground.begin(), pc_non_ground.end());
     labeled_pub_->publish(to_msg(pc_labeled, msg->header));
