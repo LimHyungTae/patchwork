@@ -103,7 +103,7 @@ int main(int argc, char **argv) {
   rclcpp::init(argc, argv);
   auto node = std::make_shared<InterfaceNode>();
 
-  bool evaluate_semantickitti = node->declare_parameter<bool>("evaluate_semantickitti");
+  bool evaluate_semantickitti = node->declare_parameter<bool>("evaluate_semantickitti", false);
   bool save_flag = node->declare_parameter<bool>("save_flag", false);
   bool use_sor_before_save = node->declare_parameter<bool>("use_sor_before_save", false);
   std::string dataset_path =
