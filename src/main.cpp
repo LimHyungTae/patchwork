@@ -58,6 +58,7 @@ class InterfaceNode : public rclcpp::Node {
     const double time_taken = patchwork_->get_time();
     const double hz = 1.0 / time_taken;
 
+    this->get_parameter("verbose", verbose_);
     if (verbose_) {
       RCLCPP_INFO(this->get_logger(),
                   "[%s] Time: %.2f ms | Hz: %.2f | Points: %zu -> %zu",
@@ -97,7 +98,7 @@ class InterfaceNode : public rclcpp::Node {
   std::string pcd_savepath_;
   std::string data_path_;
 
-  bool verbose_;
+  bool verbose_ = false;
   bool evaluate_semantickitti_;
   bool save_flag_;
 
