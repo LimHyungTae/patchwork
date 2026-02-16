@@ -25,7 +25,6 @@ class InterfaceNode : public rclcpp::Node {
 
   InterfaceNode() : Node("patchwork_benchmark_node") {
     // Declare and get parameters
-    verbose_ = this->declare_parameter<bool>("verbose", false);
     seq_ = this->declare_parameter<std::string>("seq", "00");
     acc_filename_ = this->declare_parameter<std::string>("acc_filename", "");
     pcd_savepath_ = this->declare_parameter<std::string>("pcd_savepath", "");
