@@ -25,6 +25,7 @@ class InterfaceNode : public rclcpp::Node {
 
   InterfaceNode() : Node("patchwork_benchmark_node") {
     // Declare and get parameters
+    verbose_ = this->declare_parameter<bool>("verbose", false);
     seq_ = this->declare_parameter<std::string>("seq", "00");
     acc_filename_ = this->declare_parameter<std::string>("acc_filename", "");
     pcd_savepath_ = this->declare_parameter<std::string>("pcd_savepath", "");
@@ -57,13 +58,15 @@ class InterfaceNode : public rclcpp::Node {
     const double time_taken = patchwork_->get_time();
     const double hz = 1.0 / time_taken;
 
-    RCLCPP_INFO(this->get_logger(),
-                "[%s] Time: %.2f ms | Hz: %.2f | Points: %zu -> %zu",
-                msg->header.frame_id.c_str(),
-                time_taken * 1000.0,
-                hz,
-                pc_curr.size(),
-                pc_ground.size());
+    if (verbose_) {
+      RCLCPP_INFO(this->get_logger(),
+                  "[%s] Time: %.2f ms | Hz: %.2f | Points: %zu -> %zu",
+                  msg->header.frame_id.c_str(),
+                  time_taken * 1000.0,
+                  hz,
+                  pc_curr.size(),
+                  pc_ground.size());
+    }
 
     // Publish input
     RosPointCloud2 out_msg;
@@ -94,6 +97,7 @@ class InterfaceNode : public rclcpp::Node {
   std::string pcd_savepath_;
   std::string data_path_;
 
+  bool verbose_;
   bool evaluate_semantickitti_;
   bool save_flag_;
 
