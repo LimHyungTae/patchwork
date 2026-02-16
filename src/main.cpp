@@ -7,7 +7,7 @@
 
 #define PCL_NO_PRECOMPILE
 // #define EST_GROUND 1  // In general cases
-#define EST_GROUND 14  // For adk20k_mit
+#define EST_GROUND 4  // For adk20k_mit; see `ade20k_mit_label_space.yaml` in Hydra
 #define EST_NONGROUND 0
 
 #include "patchwork/patchwork.hpp"  // Your implementation
