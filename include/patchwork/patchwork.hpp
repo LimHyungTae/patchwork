@@ -33,29 +33,10 @@ std::ostream &operator<<(std::ostream &os, const std::vector<T> &vec) {
   return os;
 }
 
-#define NUM_HEURISTIC_MAX_PTS_IN_PATCH 3000
-#define MARKER_Z_VALUE -2.2
-
-// Below colors are for visualization purpose
-#define COLOR_CYAN 0.55                        // cyan
-#define COLOR_GREEN 0.2                        // green
-#define COLOR_BLUE 0.0                         // blue
-#define COLOR_RED 1.0                          // red
-#define COLOR_GLOBALLY_TOO_HIGH_ELEVATION 0.8  // I'm not sure...haha
-
-int NOT_ASSIGNED = -2;
-int FEW_POINTS = -1;
-int UPRIGHT_ENOUGH = 0;      // cyan
-int FLAT_ENOUGH = 1;         // green
-int TOO_HIGH_ELEVATION = 2;  // blue
-int TOO_TILTED = 3;          // red
-int GLOBALLY_TOO_HIGH_ELEVATION = 4;
-
-std::vector<float> COLOR_MAP = {COLOR_CYAN,
-                                COLOR_GREEN,
-                                COLOR_BLUE,
-                                COLOR_RED,
-                                COLOR_GLOBALLY_TOO_HIGH_ELEVATION};
+// Shared types (`PCAFeature`, `Patch<PointT>`, status / color constants,
+// `point_z_cmp`) live in `patchwork/types.hpp` so the algorithm class
+// below can be read without scrolling past 70 lines of POD definitions.
+#include "patchwork/types.hpp"
 
 using Eigen::JacobiSVD;
 using Eigen::MatrixXf;
@@ -66,42 +47,6 @@ using namespace std;
 /*
     @brief PathWork ROS Node.
 */
-template <typename PointT>
-bool point_z_cmp(PointT a, PointT b) {
-  return a.z < b.z;
-}
-
-struct PCAFeature {
-  Eigen::Vector3f principal_;
-  Eigen::Vector3f normal_;
-  Eigen::Vector3f singular_values_;
-  Eigen::Vector3f mean_;
-  float d_;
-  float th_dist_d_;
-  float linearity_;
-  float planarity_;
-};
-
-template <typename PointT>
-struct Patch {
-  bool is_close_to_origin_ = false;  // If so, we can set threshold more conservatively
-  int ring_idx_ = NOT_ASSIGNED;
-  int sector_idx_ = NOT_ASSIGNED;
-
-  int status_ = NOT_ASSIGNED;
-
-  PCAFeature feature_;
-
-  pcl::PointCloud<PointT> cloud_;
-  pcl::PointCloud<PointT> ground_;
-  pcl::PointCloud<PointT> non_ground_;
-
-  void clear() {
-    if (!cloud_.empty()) cloud_.clear();
-    if (!ground_.empty()) ground_.clear();
-    if (!non_ground_.empty()) non_ground_.clear();
-  }
-};
 
 template <typename PointT>
 class PatchWork {
